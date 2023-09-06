@@ -1,0 +1,15 @@
+****class-1:1Sep ********
+****class-2:4Sep ********
+-Product Controller talks to a service.
+-Service has the business logic.
+
+Rule of Thumb:
+- If a Controller needs to talk to a service, we need to create an interface for the service.
+    This is because we can have multiple implementations of the service.
+
+-We create a service package and create a product service interface.
+-We create a product service implementation class - FakeProductService.
+- Every method in the controller will have a corresponding method with the same name preferably in the service.
+
+
+
