@@ -10,6 +10,37 @@ Rule of Thumb:
 -We create a service package and create a product service interface.
 -We create a product service implementation class - FakeProductService.
 - Every method in the controller will have a corresponding method with the same name preferably in the service.
+- In REST every resource is identified by a URI and we should get that using path variable and not request param.
+    Request param is used for query parameters or configuration parameters.
+// Dependency Injection
+- We need to inject the service into the controller.
+- We can do this by using the @Autowired annotation.
+    We can achieve this by three ways
+    1. using the constructor injection.
+    2. using the setter injection.
+    3. using the field injection.
+- We will use the constructor injection. This is the preferred way as it is immutable. Constructor injection is generally preferred for its many advantages in terms of code quality, maintainability, and testability.
+- We can use the @Qualifier annotation to specify which implementation of the service we want to use if we have multiple implementations of the service.
+ Example: if we have 2 classes - FakestoreProductService and SelfProductServiceImpl and they both implement the ProductService interface.
+    We can use the @Qualifier annotation to specify which implementation we want to use.
+     E.g:     // constructor injection
+             @Autowired
+              public ProductController(@Qualifier("fakeStoreProductService") ProductService productService) {
+                  this.productService = productService;
+              }
+
+               and annotate it accordingly in the implementation class.
+              @Service("fakeStoreProductService")
+              public class FakeStoreProductService implements ProductService {
+              }
+- We can also use the @Primary annotation to specify which implementation we want to use if we have multiple implementations of the service.
+
+* Whenever we write @autowire, the relevant object is picked from the spring container and injected into the class.
+
+
+
+
+
 
 
 
