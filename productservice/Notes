@@ -37,9 +37,94 @@ Rule of Thumb:
 
 * Whenever we write @autowire, the relevant object is picked from the spring container and injected into the class.
 
+***********************************
+We call the fakestore API to get the products.
+API at https://fakestoreapi.com/products is returning a list of products in the form of JSON.
+We need to convert this JSON into a list of products as Java objects, as we cannot use JSON directly in our application.
+We can use the Jackson library to convert JSON to Java objects.
+Whenever we are sending or receiving data from an external system, we need to convert it into Java objects.
+These objects may not be exactly the same as the objects we use in our application.
+So, as a rule of thumb, we should not use our model objects. This is because the models are replicating the database tables.
+We should create separate objects for the external system as the objects in the external systems may change.
+for handling the external system, we should create DTOs (Data Transfer Objects).
+DTOs are the objects that we use to transfer data between the external system and our application. These objects are not persisted in the database.
+We can use the same objects for both sending and receiving data.
+Calling the external system is the responsibility of the service.
+Calling the API:
+- whenever we call a third party API, we need to use the language specific library to call the API.
+Like we use axios for calling the API in React(JS), Retrofit in Android(Kotlin), python request etc.
+- In Java, we can use the Spring RestTemplate to call the API from an external system.
+We use the builder pattern to create the RestTemplate; since this will have
+a lot of fields- URI, headers, body, method, connection auth tokem etc.
 
+First we create the Rest Template Builder:
 
+@Service("fakestoreProductService")
+public class FakestoreProductService implements ProductService{
+    private final RestTemplateBuilder restTemplateBuilder;
+    private String requestUrl = "https://fakestoreapi.com/products/1";
+    public FakestoreProductService(RestTemplateBuilder restTemplateBuilder) {
+        this.restTemplateBuilder = restTemplateBuilder;
+    }
+Then we create the Rest Template:
+public String getProductById(Long id) {
+        RestTemplate restTemplate = restTemplateBuilder.build();
 
+This RestTemplate is a class that is provided by Spring which has a lot of methods to call the external system.
+- Next, we need to get the response from the API, for a GET request.
+    - For a GET request, we use the getForEntity method to get the response from the API
+    - For a POST request, we use the postForEntity method to get the response from the API
+    - For a PUT request, we use the put method to get the response from the API
+    - For a DELETE request, we use the delete method to get the response from the API
+    - For a PATCH request, we use the patchForObject method to get the response from the API
+
+Coming back to our GET request, we use the getForEntity method to get the response from the API.
+- The first parameter is the URI of the API.
+- The second parameter is the type of the response we want to get from the API.
+    - We can use the getForObject method if we want to get a single object from the API.
+    - We can use the getForEntity method if we want to get multiple objects from the API.
+
+Next, we create the URI:
+private String requestUrl = "https://fakestoreapi.com/products";
+restTemplate.getForEntity(requestUrl , Product[].class);
+
+then we get the response and convert the response using the getForEntity method:
+restTemplate.getForEntity(requestUrl , Product[].class);
+
+- The getForEntity method returns a ResponseEntity object, so we store this accordingly.
+ResponseEntity<Product[]> response = restTemplate.getForEntity(requestUrl, Product[].class);
+In our case the Product[] class will be replaced by the FakeStoreProductDto.class In our case the Product[] class will be replaced by the FakeStoreProductDto.class.
+
+- Now, this getForEntity method will return a ResponseEntity object with the body of <FakeStoreProductDto>
+     ResponseEntity<FakeStoreProductDto> response = restTemplate.getForEntity(requestUrl , FakeStoreProductDto.class,id);
+** We are using this response entity as it will also get us a lot of other things like the get status code etc.
+
+** Issue with returning the FakeStoreProductDto.class in the controller directly is that this is highly dependent on the external system's API object.
+We would want to return an object that is as per our system; independent of the external system's API object.
+
+So, we will create a separate object for our system and then convert the FakeStoreProductDto.class to our object. We will use the ProductDTO object as Product is our system's object.
+
+- We will create a DTO - GenericProductDto.java. This will have the details returned in the FakeStoreProductDto.class and the details that we want to return to the user.
+
+This is how the new implementation will look like:
+ public GenericProductDto getProductById(Long id) {
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        ResponseEntity<FakeStoreProductDto> response =
+                restTemplate.getForEntity(getProductRequestUrl, FakeStoreProductDto.class, id);
+
+        FakeStoreProductDto fakeStoreProductDto = response.getBody();
+
+        GenericProductDto product = new GenericProductDto();
+        product.setImage(fakeStoreProductDto.getImage());
+        product.setDescription(fakeStoreProductDto.getDescription());
+        product.setTitle(fakeStoreProductDto.getTitle());
+        product.setPrice(fakeStoreProductDto.getPrice());
+        product.setCategory(fakeStoreProductDto.getCategory());
+        return product;
+    }
+
+ * So, we have successfully called the external system and converted the response to our system's object and returned it to the user.
+ This conversion is internally done by the Jackson library which is used by the RestTemplate to do so.
 
 
 

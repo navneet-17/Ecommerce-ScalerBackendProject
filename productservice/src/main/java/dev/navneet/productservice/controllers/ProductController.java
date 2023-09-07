@@ -1,5 +1,6 @@
 package dev.navneet.productservice.controllers;
 
+import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.services.ProductService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +22,8 @@ public class ProductController {
         return "Get all products";
     }
 
-    // localhost:8080/products/{id}
-    // localhost:8080/products/123
     @GetMapping("{id}")
-    public String getProductById(@PathVariable("id") Long id) {
+    public GenericProductDto getProductById(@PathVariable("id") Long id) {
         return productService.getProductById(id);
     }
 
