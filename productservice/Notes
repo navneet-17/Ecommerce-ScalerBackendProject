@@ -126,6 +126,28 @@ This is how the new implementation will look like:
  * So, we have successfully called the external system and converted the response to our system's object and returned it to the user.
  This conversion is internally done by the Jackson library which is used by the RestTemplate to do so.
 
+And with this we have successfully called the external system and made a GET request .
+***************************************************
+Post Request:
+- We will create a new method in the service to create a product.
+We will post a request that has our GenericProductDto in the request body and we use the @RequestBody annotation to do so.
+- We will use the postForEntity method to post the request to the API.
+- The first parameter is the URI of the API
+- The second parameter is the request body
+- The third parameter is the type of the response we want to get from the API.
+
+    public GenericProductDto createProduct(GenericProductDto product) {
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        ResponseEntity<GenericProductDto> response = restTemplate.postForEntity(
+                createProductRequestUrl, product, GenericProductDto.class
+        );
+        return response.getBody();
+    }
+
+    * We will create a new method in the controller to create a product.
+    * We will use the @PostMapping annotation to do so.
+    * We will use the @RequestBody annotation to get the request body.
+
 
 
 
