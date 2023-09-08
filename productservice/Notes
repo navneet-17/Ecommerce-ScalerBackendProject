@@ -204,7 +204,14 @@ public GenericProductDto deleteProductById(Long id){
         product.setCategory(fakeStoreProductDto.getCategory());
         return product;
     }
-****** API to Update a product ***********************************************
+****** TODO: API to Update a product ***********************************************
+**** create Exception Handling for the API calls.***
+We will create a custom exception handler class in the exceptions package.
+We will use the @ControllerAdvice annotation to do so.
+We will use the @ExceptionHandler annotation to specify the exception we want to handle.
+
+
+
 
 
 

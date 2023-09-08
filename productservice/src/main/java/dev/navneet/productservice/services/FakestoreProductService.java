@@ -2,6 +2,7 @@ package dev.navneet.productservice.services;
 
 import dev.navneet.productservice.dtos.FakeStoreProductDto;
 import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.exceptions.NotFoundException;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -34,12 +35,15 @@ public class FakestoreProductService implements ProductService{
         return response.getBody();
     }
 
-    public GenericProductDto getProductById(Long id) {
+    public GenericProductDto getProductById(Long id) throws NotFoundException {
         RestTemplate restTemplate = restTemplateBuilder.build();
         ResponseEntity<FakeStoreProductDto> response =
                 restTemplate.getForEntity(specificProductRequestUrl, FakeStoreProductDto.class, id);
 
         FakeStoreProductDto fakeStoreProductDto = response.getBody();
+        if (fakeStoreProductDto == null) {
+         throw new NotFoundException("Product with id " + id + " not found");
+        }
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto);
     }
 
@@ -69,12 +73,12 @@ public class FakestoreProductService implements ProductService{
                 execute(specificProductRequestUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
 
         FakeStoreProductDto fakeStoreProductDto = response.getBody();
-
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto);
     }
 
     // TODO: Implementing the updateProductById method [H/W]
     public GenericProductDto updateProductById(Long id, GenericProductDto product){
+
         return null;
     }
 
