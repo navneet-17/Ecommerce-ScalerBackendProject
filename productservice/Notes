@@ -160,7 +160,53 @@ We will use the getForEntity method to get the response from the API.
 ** For the get all products, List<FakeStoreProductDto> will throw an error due to the type erasure concept in Java.
 - So, we will use the array of FakeStoreProductDto[] instead of List<FakeStoreProductDto> to get the response from the API.
 - Then we will convert the FakeStoreProductDto[] to List<FakeStoreProductDto> and then to List<GenericProductDto> and then return it to the user.
-************************************************************************************************
+****API to delete all products *********************************************************************
+** HTTP Status Codes are returned by a Controller.
+The fake store API returns the deleted product in the response body.
+The fakestore API returns a 200 status code for a successful request while we will have to throw an exception if the product to be deleted is not present.
+-- We will create a new method in the controller to delete all products.
+-- We will create a new method in the service to delete all products.
+-- We will use the @DeleteMapping annotation to do so.
+-- We will use the @ResponseStatus annotation to specify the status code.
+-- We will use the @ResponseBody annotation to return the response as the response body.
+
+-- We will use the delete method to delete the product from the API.
+-- The first parameter is the URI of the API.
+-- The second parameter is the type of the response we want to get from the API.
+
+** The fake store API returns the deleted product in the response body, but the default implementation of the delete method in the RestTemplate does not return anything. So we need to create a custom implementation of the delete method to get the response from the API.
+--> We should ideally create a new class called CustomRestTemplate and extend the RestTemplate class. We will override the delete method and return the response from the API. But we will not do this as this is not the best practice. We will use the exchange method to get the response from the API.
+** Implementing the delete method using the exchange method:
+ We just copy the code template for creating a new product and make code changes in the required places to have it work for delete.
+**** /////////////////// Existing code for creating a new product: /////////////////////////////////////////
+    public <T> ResponseEntity<T> postForEntity(String url, @Nullable Object request, Class<T> responseType, Object... uriVariables) throws RestClientException {
+        RequestCallback requestCallback = this.httpEntityCallback(request, responseType);
+        ResponseExtractor<ResponseEntity<T>> responseExtractor = this.responseEntityExtractor(responseType);
+        return (ResponseEntity)nonNull((ResponseEntity)this.execute(url, HttpMethod.POST, requestCallback, responseExtractor, uriVariables));
+    }
+/////////////////// Updating this as per our requirement for deleting an existing product: /////////////////////////////////////////
+public GenericProductDto deleteProductById(Long id){
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor = restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
+        ResponseEntity<FakeStoreProductDto> response = restTemplate.execute(specificProductRequestUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
+        FakeStoreProductDto fakeStoreProductDto = response.getBody();
+        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto);
+    }
+*** We have also created a method to convert the FakeStoreProductDto into GenericProductDto. *******************************************
+    public GenericProductDto convertFakeStoreProductIntoGenericProduct(FakeStoreProductDto fakeStoreProductDto){
+        GenericProductDto product = new GenericProductDto();
+        product.setId(fakeStoreProductDto.getId());
+        product.setImage(fakeStoreProductDto.getImage());
+        product.setDescription(fakeStoreProductDto.getDescription());
+        product.setTitle(fakeStoreProductDto.getTitle());
+        product.setPrice(fakeStoreProductDto.getPrice());
+        product.setCategory(fakeStoreProductDto.getCategory());
+        return product;
+    }
+****** API to Update a product ***********************************************
+
+
 
 
 

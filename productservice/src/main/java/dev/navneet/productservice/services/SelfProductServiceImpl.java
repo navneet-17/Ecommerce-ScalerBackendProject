@@ -23,4 +23,8 @@ public class SelfProductServiceImpl implements ProductService {
         return null;
 
     }
+
+    public GenericProductDto deleteProductById(Long id){
+        return null;
+    }
 }

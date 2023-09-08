@@ -8,7 +8,9 @@ import java.util.List;
 public interface ProductService {
     // This service class will all have the methods to interact with the Fakestore API.
     GenericProductDto createProduct(GenericProductDto product);
-    GenericProductDto getProductById(@PathVariable("id") Long id) ;
+    GenericProductDto getProductById(Long id) ;
     List<GenericProductDto> getAllProducts();
+
+    GenericProductDto deleteProductById(Long id);
 
 }

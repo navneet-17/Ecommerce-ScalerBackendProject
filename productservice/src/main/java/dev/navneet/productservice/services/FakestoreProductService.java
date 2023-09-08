@@ -3,8 +3,11 @@ package dev.navneet.productservice.services;
 import dev.navneet.productservice.dtos.FakeStoreProductDto;
 import dev.navneet.productservice.dtos.GenericProductDto;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -15,7 +18,7 @@ import java.util.List;
 public class FakestoreProductService implements ProductService{
 // This service class will all have the method implementations to interact with the Fakestore API.
     private RestTemplateBuilder restTemplateBuilder;
-    private String getProductRequestUrl = "https://fakestoreapi.com/products/{id}";
+    private String  specificProductRequestUrl = "https://fakestoreapi.com/products/{id}";
     private String productRequestsBaseUrl = "https://fakestoreapi.com/products";
 
 
@@ -34,17 +37,10 @@ public class FakestoreProductService implements ProductService{
     public GenericProductDto getProductById(Long id) {
         RestTemplate restTemplate = restTemplateBuilder.build();
         ResponseEntity<FakeStoreProductDto> response =
-                restTemplate.getForEntity(getProductRequestUrl, FakeStoreProductDto.class, id);
+                restTemplate.getForEntity(specificProductRequestUrl, FakeStoreProductDto.class, id);
 
         FakeStoreProductDto fakeStoreProductDto = response.getBody();
-
-        GenericProductDto product = new GenericProductDto();
-        product.setImage(fakeStoreProductDto.getImage());
-        product.setDescription(fakeStoreProductDto.getDescription());
-        product.setTitle(fakeStoreProductDto.getTitle());
-        product.setPrice(fakeStoreProductDto.getPrice());
-        product.setCategory(fakeStoreProductDto.getCategory());
-        return product;
+        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto);
     }
 
     @Override
@@ -57,16 +53,41 @@ public class FakestoreProductService implements ProductService{
 
         // converting the list of FakeStoreProductDto to a list of GenericProductDto
         List<GenericProductDto> products = new ArrayList<>();
-//        for (FakeStoreProductDto fakeStoreProductDto : response.getBody()) {
             for (FakeStoreProductDto fakeStoreProductDto : returnedProducts) {
-            GenericProductDto product = new GenericProductDto();
-            product.setImage(fakeStoreProductDto.getImage());
-            product.setDescription(fakeStoreProductDto.getDescription());
-            product.setTitle(fakeStoreProductDto.getTitle());
-            product.setPrice(fakeStoreProductDto.getPrice());
-            product.setCategory(fakeStoreProductDto.getCategory());
-            products.add(product);
+                products.add (convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto));
         }
         return products;
     }
+
+    public GenericProductDto deleteProductById(Long id){
+        RestTemplate restTemplate = restTemplateBuilder.build();
+
+        RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
+                restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
+        ResponseEntity<FakeStoreProductDto> response = restTemplate.
+                execute(specificProductRequestUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
+
+        FakeStoreProductDto fakeStoreProductDto = response.getBody();
+
+        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto);
+    }
+
+    // TODO: Implementing the updateProductById method [H/W]
+    public GenericProductDto updateProductById(Long id, GenericProductDto product){
+        return null;
+    }
+
+    public GenericProductDto convertFakeStoreProductIntoGenericProduct(
+                                FakeStoreProductDto fakeStoreProductDto){
+        GenericProductDto product = new GenericProductDto();
+        product.setId(fakeStoreProductDto.getId());
+        product.setImage(fakeStoreProductDto.getImage());
+        product.setDescription(fakeStoreProductDto.getDescription());
+        product.setTitle(fakeStoreProductDto.getTitle());
+        product.setPrice(fakeStoreProductDto.getPrice());
+        product.setCategory(fakeStoreProductDto.getCategory());
+        return product;
+    }
+
 }
