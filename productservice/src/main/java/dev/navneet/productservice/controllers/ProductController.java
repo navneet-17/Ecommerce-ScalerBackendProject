@@ -5,6 +5,7 @@ import dev.navneet.productservice.services.ProductService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,8 +19,8 @@ public class ProductController {
     }
 
     @GetMapping("/")
-    public String getAllProducts() {
-        return "Get all products";
+    public List<GenericProductDto> getAllProducts() {
+        return productService.getAllProducts();
     }
 
     @GetMapping("{id}")

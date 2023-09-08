@@ -7,12 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 @Service("fakestoreProductService")
 public class FakestoreProductService implements ProductService{
 // This service class will all have the method implementations to interact with the Fakestore API.
-    private final RestTemplateBuilder restTemplateBuilder;
+    private RestTemplateBuilder restTemplateBuilder;
     private String getProductRequestUrl = "https://fakestoreapi.com/products/{id}";
-    private String createProductRequestUrl = "https://fakestoreapi.com/products";
+    private String productRequestsBaseUrl = "https://fakestoreapi.com/products";
+
 
     public FakestoreProductService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplateBuilder = restTemplateBuilder;
@@ -21,7 +26,7 @@ public class FakestoreProductService implements ProductService{
     public GenericProductDto createProduct(GenericProductDto product) {
         RestTemplate restTemplate = restTemplateBuilder.build();
         ResponseEntity<GenericProductDto> response = restTemplate.postForEntity(
-                createProductRequestUrl, product, GenericProductDto.class
+                productRequestsBaseUrl, product, GenericProductDto.class
         );
         return response.getBody();
     }
@@ -40,5 +45,28 @@ public class FakestoreProductService implements ProductService{
         product.setPrice(fakeStoreProductDto.getPrice());
         product.setCategory(fakeStoreProductDto.getCategory());
         return product;
+    }
+
+    @Override
+    public List<GenericProductDto> getAllProducts() {
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        ResponseEntity<FakeStoreProductDto[]> response =restTemplate.getForEntity(productRequestsBaseUrl, FakeStoreProductDto[].class);
+        // converting the returned array of FakeStoreProductDto to a list of FakeStoreProductDto
+        List<FakeStoreProductDto> returnedProducts = Arrays.asList(response.getBody());
+        System.out.println(returnedProducts);
+
+        // converting the list of FakeStoreProductDto to a list of GenericProductDto
+        List<GenericProductDto> products = new ArrayList<>();
+//        for (FakeStoreProductDto fakeStoreProductDto : response.getBody()) {
+            for (FakeStoreProductDto fakeStoreProductDto : returnedProducts) {
+            GenericProductDto product = new GenericProductDto();
+            product.setImage(fakeStoreProductDto.getImage());
+            product.setDescription(fakeStoreProductDto.getDescription());
+            product.setTitle(fakeStoreProductDto.getTitle());
+            product.setPrice(fakeStoreProductDto.getPrice());
+            product.setCategory(fakeStoreProductDto.getCategory());
+            products.add(product);
+        }
+        return products;
     }
 }

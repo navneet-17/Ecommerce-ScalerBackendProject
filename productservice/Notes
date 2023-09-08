@@ -148,6 +148,21 @@ We will post a request that has our GenericProductDto in the request body and we
     * We will use the @PostMapping annotation to do so.
     * We will use the @RequestBody annotation to get the request body.
 
+***API to get all products *********************************************************************
+Similar to the get product by id, we will create a new method in the service to get all products.
+We will use the getForEntity method to get the response from the API.
+-> The first parameter is the URI of the API.
+-> The second parameter is the type of the response we want to get from the API.
+-> We will create a new method in the controller to get all products.
+-> We will use the @GetMapping annotation to do so.
+-> We will use the @ResponseBody annotation to return the response as the response body.
+
+** For the get all products, List<FakeStoreProductDto> will throw an error due to the type erasure concept in Java.
+- So, we will use the array of FakeStoreProductDto[] instead of List<FakeStoreProductDto> to get the response from the API.
+- Then we will convert the FakeStoreProductDto[] to List<FakeStoreProductDto> and then to List<GenericProductDto> and then return it to the user.
+************************************************************************************************
+
+
 
 
 
