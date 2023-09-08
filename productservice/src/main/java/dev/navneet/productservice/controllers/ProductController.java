@@ -42,10 +42,10 @@ public class ProductController {
         return productService.createProduct(product);
 
     }
-//    @PutMapping("{id}")
-//    public GenericProductDto updateProductById(@PathVariable("id") Long id, @RequestBody GenericProductDto product) {
-//        return productService.updateProductById(id,product);
-//    }
+    @PutMapping("{id}")
+    public GenericProductDto updateProductById(@PathVariable("id") Long id, @RequestBody GenericProductDto product) {
+        return productService.updateProductById(id,product);
+    }
 
     @ExceptionHandler(NotFoundException.class)
     private ResponseEntity<ExceptionDto> handleNotFoundException(NotFoundException notFoundException) {

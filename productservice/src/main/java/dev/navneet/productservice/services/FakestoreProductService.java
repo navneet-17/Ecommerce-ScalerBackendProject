@@ -77,10 +77,24 @@ public class FakestoreProductService implements ProductService{
     }
 
     // TODO: Implementing the updateProductById method [H/W]
-    public GenericProductDto updateProductById(Long id, GenericProductDto product){
+    public GenericProductDto updateProductById(Long id, GenericProductDto genericProductDto){
 
-        return null;
-    }
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        RequestCallback requestCallback = restTemplate.httpEntityCallback(genericProductDto, FakeStoreProductDto.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
+                restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
+        ResponseEntity<FakeStoreProductDto> responseEntity = restTemplate.execute(
+                specificProductRequestUrl, HttpMethod.PUT, requestCallback, responseExtractor, id);
+
+        FakeStoreProductDto fakeStoreProductDto = responseEntity.getBody();
+        genericProductDto.setPrice(fakeStoreProductDto.getPrice());
+        genericProductDto.setCategory(fakeStoreProductDto.getCategory());
+        genericProductDto.setDescription(fakeStoreProductDto.getDescription());
+        genericProductDto.setImage(fakeStoreProductDto.getImage());
+        genericProductDto.setTitle(fakeStoreProductDto.getTitle());
+        genericProductDto.setId(fakeStoreProductDto.getId());
+        return genericProductDto;
+       }
 
     public GenericProductDto convertFakeStoreProductIntoGenericProduct(
                                 FakeStoreProductDto fakeStoreProductDto){
