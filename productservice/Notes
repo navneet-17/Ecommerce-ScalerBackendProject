@@ -284,8 +284,86 @@ Added the de-lombok code in the ExceptionDto class.
 Shortcut  ctrl + shift + A
 Type de-lombok and select the option --> De-lombok setter.
 ********************************************************************************
+****** Homework --> API to Update a product *********************************************** **
+ public GenericProductDto updateProductById(Long id, GenericProductDto genericProductDto){
 
+        RestTemplate restTemplate = restTemplateBuilder.build();
+        RequestCallback requestCallback = restTemplate.httpEntityCallback(genericProductDto, FakeStoreProductDto.class);
+        ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
+                restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
+        ResponseEntity<FakeStoreProductDto> responseEntity = restTemplate.execute(
+                specificProductRequestUrl, HttpMethod.PUT, requestCallback, responseExtractor, id);
 
+        FakeStoreProductDto fakeStoreProductDto = responseEntity.getBody();
+        genericProductDto.setPrice(fakeStoreProductDto.getPrice());
+        genericProductDto.setCategory(fakeStoreProductDto.getCategory());
+        genericProductDto.setDescription(fakeStoreProductDto.getDescription());
+        genericProductDto.setImage(fakeStoreProductDto.getImage());
+        genericProductDto.setTitle(fakeStoreProductDto.getTitle());
+        genericProductDto.setId(fakeStoreProductDto.getId());
+        return genericProductDto;
+       }
+
+   ******** Breakdown of the above code: ******************************************************
+      Let's break down how this code works:
+
+   --> Creating RestTemplate:
+              RestTemplate restTemplate = restTemplateBuilder.build();
+
+      ## Here, we're creating an instance of RestTemplate. This is a class provided by Spring for making HTTP requests.
+
+   --> Creating Request Callback:
+
+       RequestCallback requestCallback = restTemplate.httpEntityCallback(genericProductDto, FakeStoreProductDto.class);
+
+       ##In this line, you're creating a RequestCallback which will handle the request. This RequestCallback is constructed based on the genericProductDto and FakeStoreProductDto.class. This means it's preparing the request to include the details of the product you want to update.
+
+   --> Creating Response Extractor:
+
+       ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
+               restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
+
+        ## Here, you're creating a ResponseExtractor which will handle the response from the server. It's constructed based on FakeStoreProductDto.class, indicating that you expect a response in the form of FakeStoreProductDto.
+
+   --> Executing the Request:
+
+       ResponseEntity<FakeStoreProductDto> responseEntity = restTemplate.execute(
+               specificProductRequestUrl, HttpMethod.PUT, requestCallback, responseExtractor, id);
+
+       ## This is where the actual request is made:
+
+       --> specificProductRequestUrl: This is the URL where you want to send the request.
+       --> HttpMethod.PUT: Indicates that you want to perform a PUT request.
+       --> requestCallback: This is the callback that prepares the request.
+       --> responseExtractor: This is the extractor that handles the response.
+       --> id: This is the ID of the product you want to update.
+
+       ##The response from the server is stored in responseEntity, which is of type ResponseEntity<FakeStoreProductDto>. This means it's expecting a response containing a FakeStoreProductDto.
+
+       Overall, this code is using a more manual approach to handle the request and response compared to the below code snippet. It's setting up callback functions to customize the request and response handling. This can be useful for more fine-grained control over the HTTP interaction, but it's also more verbose and less commonly used compared to the restTemplate.exchange method.
+
+Alternate approach to achieve the same:
+public GenericProductDto updateProductById(Long id, GenericProductDto product){
+    RestTemplate restTemplate = restTemplateBuilder.build();
+
+    // Construct the URL for updating a specific product
+    String updateUrl = specificProductRequestUrl + "/" + id;
+
+    // Create a request entity with the updated product details
+    HttpEntity<GenericProductDto> requestEntity = new HttpEntity<>(product);
+
+    // Send a PUT request to update the product
+    ResponseEntity<GenericProductDto> responseEntity = restTemplate.exchange(
+            updateUrl,
+            HttpMethod.PUT,
+            requestEntity,
+            GenericProductDto.class
+    );
+
+    return responseEntity.getBody();
+}
+
+********************************************************************************
 
 
 
