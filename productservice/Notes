@@ -206,9 +206,84 @@ public GenericProductDto deleteProductById(Long id){
     }
 ****** TODO: API to Update a product ***********************************************
 **** create Exception Handling for the API calls.***
-We will create a custom exception handler class in the exceptions package.
-We will use the @ControllerAdvice annotation to do so.
-We will use the @ExceptionHandler annotation to specify the exception we want to handle.
+1. We will create a custom exception handler class in the exceptions package that extends the exception and then using the super class constructor we will pass the message.
+public class NotFoundException extends Exception {
+    public NotFoundException(String message) {
+        super(message);
+    }
+}
+-- And use this in the FakeStoreProductService class:
+        if (fakeStoreProductDto == null) {
+            throw new NotFoundException("Product with id: " + id + " doesn't exist.");
+        }
+2. We can also create a @ExceptionHandler annotation in the controller to handle the exception. We can create a method in the controller to handle the exception.
+
+@ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<String> handleNotFoundException(NotFoundException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+-- We can create an exception dto to return the exception message and the status code to the user.
+@Getter
+@Setter
+public class ExceptionDto {
+    private HttpStatus errorCode;
+    private String message;
+
+    public ExceptionDto(HttpStatus status, String message) {
+        this.errorCode = status;
+        this.message = message;
+    }
+}
+
+And now, we can use this in the controller to return the exception message and the status code to the user.
+    @ExceptionHandler(NotFoundException.class)
+    private ResponseEntity<ExceptionDto> handleNotFoundException(NotFoundException notFoundException) {
+        ExceptionDto exceptionDto = new ExceptionDto(HttpStatus.NOT_FOUND,
+                notFoundException.getMessage());
+        return new ResponseEntity<>(exceptionDto, HttpStatus.NOT_FOUND);
+    }
+
+3. We can also create a @ControllerAdvice class to handle the exception.
+We should ideally not have the exception handling logic in the controller.
+Controller should only be responsible for handling the request and returning the response and not handling the exceptions.
+** Now this notFound Exception can be thrown from any method in the controller.
+Even more, we can have many other controllers as well that can throw an not found exception.
+We can create a @ControllerAdvice class to handle the exception globally across the application.
+@ControllerAdvice
+--> Controller Advice is a class that is used to handle exceptions globally in the application.
+We can create a @ControllerAdvice class and move the code that we wrote in the controller to handle the exception to this class.
+We can also create other methods to handle other exceptions.
+Below is the code for the @ControllerAdvice class:
+    @ControllerAdvice
+    public class ControllerAdvices {
+        @ExceptionHandler(NotFoundException.class)
+        private ResponseEntity<ExceptionDto> handleNotFoundException(
+                NotFoundException notFoundException
+        ) {
+
+            return new ResponseEntity(
+                    new ExceptionDto(HttpStatus.NOT_FOUND, notFoundException.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        @ExceptionHandler(ArrayIndexOutOfBoundsException.class)
+        private ResponseEntity<ExceptionDto> handleArrayIndexOutOfBound(
+                ArrayIndexOutOfBoundsException notFoundException
+        ) {
+
+            return new ResponseEntity(
+                    new ExceptionDto(HttpStatus.NOT_FOUND, notFoundException.getMessage()),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+    }
+********************************************************************************
+Added the de-lombok code in the ExceptionDto class.
+Shortcut  ctrl + shift + A
+Type de-lombok and select the option --> De-lombok setter.
+********************************************************************************
 
 
 

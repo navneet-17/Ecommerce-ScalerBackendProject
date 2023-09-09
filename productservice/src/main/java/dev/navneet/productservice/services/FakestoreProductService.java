@@ -63,7 +63,7 @@ public class FakestoreProductService implements ProductService{
         return products;
     }
 
-    public GenericProductDto deleteProductById(Long id){
+    public GenericProductDto deleteProductById(Long id) throws NotFoundException {
         RestTemplate restTemplate = restTemplateBuilder.build();
 
         RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
@@ -73,6 +73,9 @@ public class FakestoreProductService implements ProductService{
                 execute(specificProductRequestUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
 
         FakeStoreProductDto fakeStoreProductDto = response.getBody();
+        if (fakeStoreProductDto == null) {
+            throw new NotFoundException("Product with id " + id + " not found");
+        }
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductDto);
     }
 

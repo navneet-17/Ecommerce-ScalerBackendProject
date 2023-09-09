@@ -32,7 +32,7 @@ public class ProductController {
     }
 
     @DeleteMapping("{id}")
-    public GenericProductDto deleteProductById(@PathVariable("id") Long id) {
+    public GenericProductDto deleteProductById(@PathVariable("id") Long id) throws NotFoundException {
         return productService.deleteProductById(id);
     }
 
@@ -47,10 +47,13 @@ public class ProductController {
         return productService.updateProductById(id,product);
     }
 
+
     @ExceptionHandler(NotFoundException.class)
     private ResponseEntity<ExceptionDto> handleNotFoundException(NotFoundException notFoundException) {
         ExceptionDto exceptionDto = new ExceptionDto(HttpStatus.NOT_FOUND,
                 notFoundException.getMessage());
         return new ResponseEntity<>(exceptionDto, HttpStatus.NOT_FOUND);
     }
+
+
 }
