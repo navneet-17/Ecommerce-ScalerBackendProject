@@ -364,6 +364,64 @@ public GenericProductDto updateProductById(Long id, GenericProductDto product){
 }
 
 ********************************************************************************
+Adapter Design Pattern:
+- The code that we have in the FakeStoreProductService class is tightly coupled with the fakestore API.
+- If we want to change the API, we will have to change the code in the service class, which is not a good practice.
+- We should have a loosely coupled code.
+In fact, this class is actually a client for the fakestore API.
+
+--> we create a package thirdpartyclients and under that we will create a package productservice.
+--> Inside this productservice package, we will create multiple clients for productservice.
+    --> We will create an interface called ThirdPartyProductServiceClient.
+    --> We will create an implementation class called FakeStoreProductServiceClient.
+        Every third party client for a particular product service will need to have the basic CRUD methods.
+         Luckily, for us we have already defined these in the FakeStoreProductService class.
+
+As per the Adapter Design Pattern, we will create an interface called ThirdPartyProductServiceClient.
+We will create an interface for this client and then create an implementation class for this interface.
+This interface will have all the methods that we have in the FakeStoreProductService class.
+Ideally, whenever we have a class that is a client for an external system, we should have an adapter interface from which different classes can implement the 3rd party API methods.
+Any client class will have the basic CRUD operations that we have defined in the FakeStoreProductService class.
+
+The usual flow in the Adapter Design Pattern is:
+1. We have a client class that is tightly coupled with the external system.
+2. We create an interface for the client class.
+3. We create an implementation class for the interface.
+4. This implementation class for the adapter will call the API.
+
+Let us consider the PhonePe Adapter example to understand this better.
+--> PhonePe is a payment gateway that is used by many merchants.
+--> PhonePe has a lot of clients like YesBank Adapter class, ICICI Bank Adapter class etc.
+--> All these clients will have the basic CRUD operations like create, read, update and delete.
+--> So, we will create an interface called PhonePeClient as Bank Adapter.
+--> We will create an implementation class for this interface called YesBank Adapter class, ICICI Bank Adapter class etc.
+--> Each of these adapter classes will then call the 3rd Party APIs of the respective banks.
+*************************************************************************************************************
+The ThirdPartyProductServiceClient interface will have the same methods as the Product Service interface that we have created.
+    public interface ThirdPartyProductServiceClient {
+        public GenericProductDto getProductById(Long id);
+        public GenericProductDto createProduct(GenericProductDto product);
+        public List<GenericProductDto> getAllProducts();
+        public GenericProductDto deleteProductById(Long id);
+        public GenericProductDto updateProductById(Long id, GenericProductDto product);
+    }
+
+The FakeStoreProductServiceClient class will implement the ThirdPartyProductServiceClient interface.
+So, we move all the implementation code from the FakeStoreProductService class to the FakeStoreProductServiceClient class.
+Our current directory structure for the Adapter Design Pattern will be:
+    - thirdpartyclients package [for all the clients that we will need in the project]
+        - productservice package [for all the clients for the productservice]
+            - ThirdPartyProductServiceClient.java interface that will have the third party method declarations.
+            - FakeStore package [for all the clients for the fakestore]
+                - FakeStoreProductServiceClient.java class that will implement the ThirdPartyProductServiceClient interface.
+                
+*************************************************************************************************************
+
+
+
+
+
+
 
 
 
