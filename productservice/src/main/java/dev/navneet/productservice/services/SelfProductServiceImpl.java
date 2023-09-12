@@ -1,6 +1,7 @@
 package dev.navneet.productservice.services;
 
 import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductServiceClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,7 +22,6 @@ public class SelfProductServiceImpl implements ProductService {
     @Override
     public List<GenericProductDto> getAllProducts() {
         return null;
-
     }
 
     public GenericProductDto deleteProductById(Long id){

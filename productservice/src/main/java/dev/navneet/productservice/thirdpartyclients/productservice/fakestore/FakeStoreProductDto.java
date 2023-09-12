@@ -1,4 +1,4 @@
-package dev.navneet.productservice.dtos;
+package dev.navneet.productservice.thirdpartyclients.productservice.fakestore;
 
 
 import lombok.Getter;
