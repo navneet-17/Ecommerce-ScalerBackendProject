@@ -531,6 +531,57 @@ public class FakeStoreProductServiceClient {
         this.productRequestsBaseUrl  = fakeStoreApiUrl + fakeStoreProductsApiPath;
         this.specificProductRequestUrl = fakeStoreApiUrl + fakeStoreProductsApiPath + "/{id}";
     }
+*************************************************************************************************************
+Another Way to handle Exceptions
+So far we have used 2 ways to handle exceptions
+    1. @ExceptionHandler in the controller to handle the exceptions thorw by any method defined inside the controller.
+    2. @ControllerAdvice to handle the exceptions globally across the application.
+    There's also a third way to handle exceptions - @ResponseStatus .
+We can also use the @ResponseStatus annotation to handle the exceptions.
+- @ResponseStatus annotation is used to specify the status code.
+
+Differences between the Exception Handling mechanism that we have seen so far
+1. @ExceptionHandler is used to handle the exceptions thrown by the methods defined in the controller.
+    --> Within the Controller, we can have multiple methods that can throw the same exception.
+    --> Add the method to handle the exception in the controller itself by annotating it with @ExceptionHandler.
+
+        @ExceptionHandler(NotFoundException.class)
+        private ResponseEntity<ExceptionDto> handleNotFoundException(NotFoundException notFoundException) {
+            ExceptionDto exceptionDto = new ExceptionDto(HttpStatus.NOT_FOUND,
+                    notFoundException.getMessage());
+            return new ResponseEntity<>(exceptionDto, HttpStatus.NOT_FOUND);
+        }
+
+     --> If any of them methods defined in this Controller throws the exception, then this method will be called to handle the exception.
+     --> So, instead of returning what the Controller is returning, the dispatcher will return what the method annotated with @ExceptionHandler is returning!!
+
+   What if we have multiple controllers and we want to handle the same exception and return the same thing?
+   In other words, we want to handle the same exception globally across the application.
+   In that case, we can use the @ControllerAdvice annotation, instead of manually writing the @ExceptionHandler annotation in each controller, which will lead to code duplication.
+
+2. @ControllerAdvice is used to handle the exceptions globally across the application.
+    --> We can create a @ControllerAdvice class and move the code that we wrote in the controller to handle the exception to this class.
+    --> Inside this ControllerAdvice, we can handle all the different types of exceptions that we want to handle.
+    --> So, now instead of being inside each and every Controller, the exception handlers now move to a ControllerAdvice class.
+
+ We also a third way to handle exceptions - @ResponseStatus.
+ --> Let's say whenever we encounter a Not Found Exception an exception, we know that we can send a 404 Not Found status to the client, regardless of where the exception came from.
+ For things like this, we do not need to create a separate method to handle the exception.
+    We can use the @ResponseStatus annotation int the exceptions class itself to handle the Not Found exceptions.
+
+    e.g:
+    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    public class NotFoundException extends Exception {
+    public NotFoundException(String message) {
+            super(message);
+        }
+    }
+
+--> In this, we can specify many things as per our requirement.
+--> In the above example, we have mentioned that if the exception of type NotFoundException ever gets called, don't throw an exception to the client. In fact it also tells that just return a response with a value of "HttpStatus.NOT_FOUND".
+--> We can also specify the reason for the exception if required.
+--> This is a very simple/basic way to handle exceptions.
+*************************************************************************************************************
 
 
 

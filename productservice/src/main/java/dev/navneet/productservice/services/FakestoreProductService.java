@@ -15,6 +15,10 @@ public class FakestoreProductService implements ProductService{
 // This service class will all have the method implementations to interact with the Fakestore API.
     private  FakeStoreProductServiceClient fakeStoreProductServiceClient;
 
+    public FakestoreProductService(FakeStoreProductServiceClient fakeStoreProductServiceClient) {
+        this.fakeStoreProductServiceClient = fakeStoreProductServiceClient;
+    }
+
     public GenericProductDto createProduct(GenericProductDto product) {
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.createProduct(product));
     }

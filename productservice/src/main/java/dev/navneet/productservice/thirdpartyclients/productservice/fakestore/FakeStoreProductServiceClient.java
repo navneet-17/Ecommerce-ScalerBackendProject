@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
-
+@Service
 public class FakeStoreProductServiceClient {
     private final RestTemplateBuilder restTemplateBuilder;
 
