@@ -502,6 +502,35 @@ Difference between primary and qualifier annotations:
 - The primary annotation is used to specify which implementation of the service we want to use if we have multiple implementations of the service.
 - The qualifier annotation is used to specify which implementation we want to use if we have multiple implementations of the service.
 *************************************************************************************************************
+Using the properties file to specify the API URL:
+- We will create a new file called application.properties in the resources folder.
+- We will create a property called fakestore.api.url and specify the URL of the API.
+- We will use the @Value annotation to get the value of the property.
+
+fakestore.api.url=https://fakestoreapi.com
+fakestore.api.paths.product=/products
+
+Retrieving the values in the service client file:
+public class FakeStoreProductServiceClient {
+    private final RestTemplateBuilder restTemplateBuilder;
+
+
+    @Value("${fakestore.api.url}")
+    private String fakeStoreApiUrl;
+
+    @Value("${fakestore.api.paths.product}")
+    private String fakeStoreProductsApiPath;
+
+    private final String specificProductRequestUrl ;
+    private final String productRequestsBaseUrl ;
+
+    public FakeStoreProductServiceClient(RestTemplateBuilder restTemplateBuilder,
+                                         @Value("${fakestore.api.url}") String fakeStoreApiUrl,
+                                         @Value("${fakestore.api.paths.product}") String fakeStoreProductsApiPath) {
+        this.restTemplateBuilder = restTemplateBuilder;
+        this.productRequestsBaseUrl  = fakeStoreApiUrl + fakeStoreProductsApiPath;
+        this.specificProductRequestUrl = fakeStoreApiUrl + fakeStoreProductsApiPath + "/{id}";
+    }
 
 
 

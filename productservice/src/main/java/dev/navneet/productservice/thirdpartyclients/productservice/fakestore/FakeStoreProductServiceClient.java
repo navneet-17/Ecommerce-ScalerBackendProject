@@ -2,6 +2,7 @@ package dev.navneet.productservice.thirdpartyclients.productservice.fakestore;
 
 import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +15,24 @@ import java.util.Arrays;
 import java.util.List;
 
 public class FakeStoreProductServiceClient {
-    // This service class will all have the method implementations to interact with the Fakestore API.
     private final RestTemplateBuilder restTemplateBuilder;
-    private final String  specificProductRequestUrl = "https://fakestoreapi.com/products/{id}";
-    private final String productRequestsBaseUrl = "https://fakestoreapi.com/products";
 
 
-    public FakeStoreProductServiceClient(RestTemplateBuilder restTemplateBuilder) {
+    @Value("${fakestore.api.url}")
+    private String fakeStoreApiUrl;
+
+    @Value("${fakestore.api.paths.product}")
+    private String fakeStoreProductsApiPath;
+
+    private final String specificProductRequestUrl ;
+    private final String productRequestsBaseUrl ;
+
+    public FakeStoreProductServiceClient(RestTemplateBuilder restTemplateBuilder,
+                                         @Value("${fakestore.api.url}") String fakeStoreApiUrl,
+                                         @Value("${fakestore.api.paths.product}") String fakeStoreProductsApiPath) {
         this.restTemplateBuilder = restTemplateBuilder;
+        this.productRequestsBaseUrl  = fakeStoreApiUrl + fakeStoreProductsApiPath;
+        this.specificProductRequestUrl = fakeStoreApiUrl + fakeStoreProductsApiPath + "/{id}";
     }
 
     public FakeStoreProductDto createProduct(GenericProductDto product) {
