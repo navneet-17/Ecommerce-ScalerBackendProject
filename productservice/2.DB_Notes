@@ -221,6 +221,7 @@ Choosing the Right Strategy:
 
 --> Table Per Class Inheritance provides a clean separation of classes into tables, but it can result in more complex queries due to the need for joins.
     --> Queries on object of child will be fast, however queries on object of parent attributes will be inefficient as Union All operation will be required on all the tables.
+****** Implementing the Inheritance in Spring Data JPA: *******************
 
 
 
