@@ -151,6 +151,84 @@ Composition and aggregation are two types of relationships in object-oriented pr
     Aggregation is a weaker form of association where objects are related, but they can exist independently.
     In a UML diagram, association is typically represented by a line connecting classes, while composition is represented by a solid diamond shape on the side of the whole class, and aggregation is represented by an empty diamond shape.
 
+**Class - 2 on DB: Inheritance in Spring Data JPA**********
+Representing Inheritance in Spring Data JPA
+There are 4 types of inheritance in Spring Data JPA:
+    1. Mapped SuperClass
+    2. Table Per Class
+    3. Joined Table
+    4. Single Table
+
+Mapped Superclass:
+ --> Mapped Superclass is used when we want to share the common fields between the entities.
+ --> We use the @MappedSuperclass annotation to represent the Mapped Superclass in the parent class.
+ --> No table is created for the parent class.
+ --> One table each is created for the child class which includes all the fields from the parent class and also some specific fields for the child class.
+Mapped SuperCLass is typically used when the parent class is abstract and we want to share the common fields between the entities.
+
+Table Per Class:
+--> Similar to the Mapped Superclass, the Table Per Class is used when we want to share the common fields between the entities.
+--> ORM creates a table for the parent class and a table for each child class.
+--> When we query the parent class, the ORM queries the parent table and the child table both for the parent repository.
+  --> ORM returns the parent class object with the common fields from the parent table and the specific fields from the child table.
+  --> It uses the UNION ALL operator to combine the results from the parent table and the child table.
+  [Union removes the duplicate records from the result set. Union All does not remove the duplicate records from the result set. Union All is faster than Union, and hence ORM uses Union All instead of Union to query the objects.]
+--> When we query the child class, the ORM queries the child table only for the child repository.
+
+Joined Table:
+--> Similar to the Table Per Class, the Joined Table is used when we want to share the common fields between the entities.
+--> ORM creates a table for the parent class and a table for each child class.
+--> All of the attributes of the parent class are mapped to the parent table, and are not present in the child table.
+--> Tables of thh child class have their own attributes and also the foreign key to the parent table.
+--> Using the foreign key, the ORM joins the parent table and the child table to query the objects.
+ --> It uses the JOIN operator to combine the results from the parent table and the child table.
+ --> Each table only contains the attributes that are specific to that class.
+ --> For any other attribute that is required from the other table, a 'JOIN' operation has to be performed. In such cases, the ORM queries the parent table and the child table both.
+
+ Pros:
+    To get all the users in the system, we can query the parent table only.
+        --> Select name from user;
+        This is a very efficient query as it does not need to join the parent table and the child table.
+ Cons:
+    To get the details of the child classes has become very inefficient.
+        This query needs to join the parent table and the child table to get the details of the child classes in the form of a child object.
+        --> Select * from user where user_type = 'ADMIN';
+        This query needs to join the parent table and the child table to get the details of the child class (Admin table).
+
+Single Table:
+--> Similar to the Table Per Class, the Single Table is used when we want to share the common fields between the entities.
+--> In the Single Table Inheritance,  ORM creates a single database table to represent all classes in an inheritance hierarchy. Each row in the table corresponds to an instance of one of the classes, and there is usually a discriminator column that indicates the type of each row.
+--> There is a discriminator/differentiator column that indicates the type of each row.
+Pros:
+    --> No join is required to get the details of the child classes.
+    --> Reading the data is very efficient and fast.
+Cons:
+    --> The table can become very large and can contain a lot of null values.
+    --> It is impossible to have a not null constraint on the columns that are specific to the child classes.
+    --> It is impossible to have a unique constraint on the columns that are specific to the child classes.
+
+Choosing among the 4 inheritance methods:
+Choosing the Right Strategy:
+
+--> Mapped Superclass Inheritance is useful when you have shared attributes among multiple classes, but it doesn't create a corresponding table for the superclass.
+ ** It is typically used when we have an abstract parent class and we want to share the common fields between the entities.
+
+--> Joined Table Inheritance balances the strengths of Single Table and Table Per Class, but it requires more complex database schema and can lead to more complex queries.
+    --> queries to get the object of the parent class is very fast, however details of the child classes are very inefficient as Join operation will be required.
+    --. It has least amount of redundancy and null values, hence is usually the best option.
+
+--> Single Table Inheritance is usually the simplest and most straightforward option, but it can lead to a lot of null values for attributes that don't apply to certain subclasses.
+
+--> Table Per Class Inheritance provides a clean separation of classes into tables, but it can result in more complex queries due to the need for joins.
+    --> Queries on object of child will be fast, however queries on object of parent attributes will be inefficient as Union All operation will be required on all the tables.
+
+
+
+
+
+
+
+
 
 
 
