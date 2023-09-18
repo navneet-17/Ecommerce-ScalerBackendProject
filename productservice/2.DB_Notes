@@ -79,7 +79,7 @@ UUID:
 UUID-7 is very popular nowadays to generate the primary key for the table. UUID-4 is the next popular one.
 
 -> UUID as a String will be 36 characters long and will take up 36 bytes of space. (VARCHAR(36))
--> UUID as a byte array will be 16 bytes long and hence asr stored as a BINARY(16) in the database.
+-> UUID as a byte array will be 16 bytes long and hence is stored as a BINARY(16) in the database.
 We are going to use UUID as the primary key for the product table
 
 ** Using UUID in the project
@@ -92,6 +92,64 @@ We are going to use UUID as the primary key for the product table
 2. Add the UUIDGenerator class to the project
 3. Add the @GeneratedValue(generator = "UUID") and @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator") annotations to the id field in the BaseEntity class.
 4. Add the @Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false) annotation to the id field in the BaseEntity class.
+****The final implementation will look something like this:****
+    @Id
+    @GeneratedValue(generator = "navneet-uuid")
+    @GenericGenerator(name = "navneet-uuid", strategy = "uuid2")
+    @Column(name = "id", columnDefinition = "binary(16)", nullable = false, updatable = false)
+    private UUID uuid;
+***************************************
+There are 4 types of relationships in the database:
+1. One to One
+2. One to Many
+3. Many to One
+4. Many to Many
+
+Inheritance and Associations are two different concepts that represent relationships between entities.
+
+**Inheritance is a relationship between two entities where one entity is a child of the other entity.
+Inheritance can be further classified into 3 categories:
+    Single Table: All the entities are stored in a single table.
+    Table Per Class: Each entity is stored in a separate table.
+    Joined: The parent entity is stored in a separate table and the child entity is stored in a separate table.
+
+**Association is a relationship between two entities where one entity is associated with the other entity.
+Association can be further classified into 2 categories:
+    Composition: The child entity cannot exist without the parent entity.
+    Aggregation: The child entity can exist without the parent entity.
+
+Details of Inheritance and Association:
+
+**** Details of Composition and Aggregation: ********
+Composition and aggregation are two types of relationships in object-oriented programming (OOP), and they are closely related to association:
+
+--> Association:
+    Definition: Association represents a bi-directional relationship between two classes, indicating that one class is related to another. This relationship can be one-to-one, one-to-many, or many-to-many.
+    Example: Consider a Customer class and an Order class. A customer can place multiple orders, indicating a one-to-many association.
+
+--> Composition:
+    Definition: Composition is a stronger form of association. It implies a whole-part relationship where the existence of the whole is dependent on the existence of the parts. In composition, if the parent object is destroyed, all of its child objects are also destroyed.
+    Example: A Car class may have an engine, wheels, and seats. If the car is destroyed, its engine, wheels, and seats are also removed.
+
+--> Aggregation:
+    Definition: Aggregation is a type of association that represents a whole-part relationship, but it is not as strict as composition. In aggregation, the parts can exist independently of the whole. If the parent object is destroyed, the child objects can still exist.
+    Example: A Library class may contain Books. If the library closes, the books still exist; they can be moved to another library.
+
+**** Association and Composition: ************************************************************************
+
+    Composition is a more specific form of association. It represents a strong relationship where one class is composed of other classes. In this case, the composed objects are part of the whole and cannot exist independently.
+
+    Example: A Library is composed of Books. If the library is destroyed, all associated books are also destroyed.
+
+****** Association and Aggregation: ***********************************************************************
+    Aggregation is also a form of association, but it represents a weaker relationship. It implies that objects are related, but they can exist independently of each other.
+    Example: A Department has a list of Employees. If the department is dissolved, the employees can still exist and may join other departments.
+
+****** Summary: ***************************************************************************************************
+    Association is a general term for relationships between classes.
+    Composition is a strong form of association where one class is composed of others, and the composed parts cannot exist without the whole.
+    Aggregation is a weaker form of association where objects are related, but they can exist independently.
+    In a UML diagram, association is typically represented by a line connecting classes, while composition is represented by a solid diamond shape on the side of the whole class, and aggregation is represented by an empty diamond shape.
 
 
 
