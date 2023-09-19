@@ -315,4 +315,23 @@ select
 #############################################
 So, the query is doing a union all on all the child tables for the user class, which is what we had discussed earlier.
 
+4. Joined Table Inheritance:
+The User class will now look like this:
+@Getter
+@Setter
+@ToString
+@Entity(name = "jt_user")
+@Inheritance(strategy = InheritanceType.JOINED)
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String name;
+    private String email;
+}
+And now we will just use the @PrimaryKeyJoinColumn(name = "user_id") annotation on the child classes to specify the foreign key to the parent table. By default, the foreign key is the primary key of the parent table, which is denoted by the name 'id'.
+-- Having done this, we will only have individual fields values in the child tables and not the fields from the parent table. The fields from the parent table will be queried using the foreign key.
+**********************************************
+
+
 
