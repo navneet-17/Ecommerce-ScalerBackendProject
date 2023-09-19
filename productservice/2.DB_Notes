@@ -263,5 +263,56 @@ public class User {
 --> The ordinal value of the class is the index of the class in the inheritance hierarchy.
 --> The ordinal value of the User class is 0, the ordinal  the ordinal value of the Student class is 1, and the ordinal value of the TA class is 2 and value of the Mentor class is 3.
 ***********************************************************
+3. Table Per Class Inheritance:
+The User class will now look like this:
+@Getter
+@Setter
+@ToString
+@Entity(name = "tpc_user")
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String name;
+    private String email;
+}
+If we do a findAll() on the User repository, we will get the following query:
+#############################################
+select
+				user0_.id as id1_0_,
+				user0_.email as email2_0_,
+				user0_.name as name3_0_,
+				user0_.dtype as dtype1_0_
+		from
+				tpc_user user0_
+		union
+		all select
+				student0_.id as id1_0_,
+				student0_.email as email2_0_,
+				student0_.name as name3_0_,
+				student0_.mentor_id as mentor_i4_0_
+		from
+				tpc_student student0_
+		union
+		all select
+				mentor0_.id as id1_0_,
+				mentor0_.email as email2_0_,
+				mentor0_.name as name3_0_,
+				mentor0_.salary as salary4_0_
+		from
+				tpc_mentor mentor0_
+		union
+		all select
+				ta0_.id as id1_0_,
+				ta0_.email as email2_0_,
+				ta0_.name as name3_0_,
+				ta0_.salary as salary4_0_
+		from
+				tpc_ta ta0_
+		order by
+				id1_0_
+#############################################
+So, the query is doing a union all on all the child tables for the user class, which is what we had discussed earlier.
 
 
