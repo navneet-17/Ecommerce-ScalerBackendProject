@@ -1,4 +1,4 @@
-package dev.navneet.productservice.inheritanceDemo;
+package dev.navneet.productservice.inheritanceDemo.mappedsuperclass;
 
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;

@@ -1,4 +1,4 @@
-package dev.navneet.productservice.inheritanceDemo;
+package dev.navneet.productservice.inheritanceDemo.mappedsuperclass;
 
 import jakarta.persistence.Entity;
 import lombok.Getter;
