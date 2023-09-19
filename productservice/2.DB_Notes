@@ -243,3 +243,25 @@ public class User {
     private String email;
 }
 --> In the above example, the discriminator column will be created by default with the name 'dtype'. --> st_user, st_mentor, st_student, st_ta.
+--> Ideally we should have a discriminator column with the name 'user_type' instead of 'dtype'.
+--> We can change the name and value of the discriminator column using the @DiscriminatorColumn annotation.
+SO, the user class will now look like this:
+@Getter@Setter
+@Entity(name="st_user")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "user_type",
+        discriminatorType = DiscriminatorType.INTEGER
+    )
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String name;
+    private String email;
+}
+--> The discriminator column will now be created with the name 'user_type' and the value will be the ordinal value of the class.
+--> The ordinal value of the class is the index of the class in the inheritance hierarchy.
+--> The ordinal value of the User class is 0, the ordinal  the ordinal value of the Student class is 1, and the ordinal value of the TA class is 2 and value of the Mentor class is 3.
+***********************************************************
+
+
