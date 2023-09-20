@@ -98,13 +98,7 @@ We are going to use UUID as the primary key for the product table
     @GenericGenerator(name = "navneet-uuid", strategy = "uuid2")
     @Column(name = "id", columnDefinition = "binary(16)", nullable = false, updatable = false)
     private UUID uuid;
-***************************************
-There are 4 types of relationships in the database:
-1. One to One
-2. One to Many
-3. Many to One
-4. Many to Many
-
+**** Relationship between entities ************************************
 Inheritance and Associations are two different concepts that represent relationships between entities.
 
 **Inheritance is a relationship between two entities where one entity is a child of the other entity.
@@ -332,6 +326,70 @@ public class User {
 And now we will just use the @PrimaryKeyJoinColumn(name = "user_id") annotation on the child classes to specify the foreign key to the parent table. By default, the foreign key is the primary key of the parent table, which is denoted by the name 'id'.
 -- Having done this, we will only have individual fields values in the child tables and not the fields from the parent table. The fields from the parent table will be queried using the foreign key.
 **********************************************
+Cardinality:
+Cardinality is the number of instances of an entity that can be associated with the number of instances of another entity.
+There are 4 types of cardinality:
+		1. One to One
+		2. One to Many
+		3. Many to One
+		4. Many to Many
+One to One:
+		One to One is a relationship between two entities where one entity is associated with only one instance of another entity.
+		Example: A User has one Passport, one PAN Card, one Aadhaar Card etc.
 
+One to Many:
+		One to Many is a relationship between two entities where one entity is associated with many instances of another entity.
+		Example: A User has many Addresses, many Phone Numbers, many Bank Accounts etc.
 
+Many to One:
+		Many to One is a relationship between two entities where many instances of one entity are associated with one instance of another entity.
+		Example: Many Users have one pin code, one nationality etc.
 
+Many to Many:
+		Many to Many is a relationship between two entities where many instances of one entity are associated with many instances of another entity.
+		Example: Many Users have many Roles, many Users have many Permissions etc.
+##########
+In our Sprinboot project, we have 2 entities: Product and Category.
+1 product has 1 category
+1 category has many products
+So,the cardinality between the product and the category entities is One to Many.
+##########
+In Product, we define the relationship as follows:
+    @JoinColumn(name = "category_id")
+    @ManyToOne
+    private Category category;
+
+In Category, we define the relationship as follows:
+			@OneToMany
+		private List<Product> products;
+
+Between 2 different entities, there can be multiple relationships.
+For example, in whatsapp, one user can be creator/admin/member .. so this is demonstrate 3 different relationships between a user and a group.
+	1 group can have many users
+	1 user can be a member of many groups
+		User: Group --> M:N
+
+	1 user can be a creator of many groups
+	1 group can have only 1 creator
+		User: Group --> 1:M
+
+	1 user can be an admin of many groups
+	1 group can have many admins
+		User: Group --> M:N
+
+So, we can see that between 2 entities, there can be multiple relationships.
+
+############################################
+
+If we use the mapping between Category and Products in the way mentioned above, SpringIf we use the mapping between Category and Products in the way mentioned above, Spring Data JPA will create a new table called product_category to store the relationship between the 2 entities. This is called a Join Table.
+########
+This is because Spring thinks that there are 2 different relationships between product and categories.
+	1. One to Many
+	2. Many to Many
+So, Spring creates a join table to store the relationship between the 2 entities.
+########
+When a relationship is defined between 2 entities, in the entity that represents 1 of the M:1 Relationship, we use the (mappedBy = "entityName") attribute in the @OneToMany annotation.
+In our case, the relationship is between Product and Category is M:1, Product being the M and Category being the 1.
+So, in the Category entity, we will use the following annotation:
+	@OneToMany(mappedBy = "category")
+	private List<Product> products;
