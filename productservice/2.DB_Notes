@@ -393,3 +393,9 @@ In our case, the relationship is between Product and Category is M:1, Product be
 So, in the Category entity, we will use the following annotation:
 	@OneToMany(mappedBy = "category")
 	private List<Product> products;
+
+**********************************************
+Implementing Product and Category Repositories:
+1. Create the ProductRepository interface
+
+2. Create the CategoryRepository interface

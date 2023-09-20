@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-
+@Setter @Getter
 @Entity(name = "categories")
 public class Category extends BaseModel {
     @Column
