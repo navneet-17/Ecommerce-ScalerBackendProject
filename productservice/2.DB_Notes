@@ -349,7 +349,7 @@ Many to Many:
 		Many to Many is a relationship between two entities where many instances of one entity are associated with many instances of another entity.
 		Example: Many Users have many Roles, many Users have many Permissions etc.
 ##########
-In our Sprinboot project, we have 2 entities: Product and Category.
+In our SpringBoot project, we have 2 entities: Product and Category.
 1 product has 1 category
 1 category has many products
 So,the cardinality between the product and the category entities is One to Many.
@@ -362,11 +362,11 @@ In Product, we define the relationship as follows:
 In Category, we define the relationship as follows:
 			@OneToMany
 		private List<Product> products;
-
+##########
 Between 2 different entities, there can be multiple relationships.
-For example, in whatsapp, one user can be creator/admin/member .. so this is demonstrate 3 different relationships between a user and a group.
-	1 group can have many users
+For example, in whatsapp, one user can be creator/admin/member .. so this demonstrates 3 different relationships between a user and a group.
 	1 user can be a member of many groups
+	1 group can have many users
 		User: Group --> M:N
 
 	1 user can be a creator of many groups
@@ -380,22 +380,93 @@ For example, in whatsapp, one user can be creator/admin/member .. so this is dem
 So, we can see that between 2 entities, there can be multiple relationships.
 
 ############################################
-
-If we use the mapping between Category and Products in the way mentioned above, SpringIf we use the mapping between Category and Products in the way mentioned above, Spring Data JPA will create a new table called product_category to store the relationship between the 2 entities. This is called a Join Table.
+If we use the mapping between Category and Products in the way mentioned above, Spring Data JPA will create a new table called product_category to store the relationship between the 2 entities. This is called a Join Table.
 ########
 This is because Spring thinks that there are 2 different relationships between product and categories.
-	1. One to Many
-	2. Many to Many
-So, Spring creates a join table to store the relationship between the 2 entities.
+	1. One to Many (Category to Product)
+	2. Many to Many (Category to Product)
+It creates a category id in the product table for the 1:M mapping.
+It also creates a separate table called categories_products to store the M:N mapping.
+
+This is not what we want. We want to have only 1 relationship between the 2 entities, which is 1:M.
+
+So, we need to tell Spring Data JPA that there is only 1 relationship between the 2 entities- Category and Products, which is 1:M.
+
+To do this, we can use the JPA Buddy plugin's Owning side feature to mark that the Category owns the Product or rather there can be many products tha belong to one category.
+
+So, we go to the Category entity mark that the Category owns the Product. Due to this, the JPA plugin will add the following annotation to the Category entity:
+
+** If there is a Many to One relationship between 2 entities, then the entity that represents the One side of the cardinality will have the  @OneToMany annotation and just adjacent to it, we will mark mapped by the entity that represents the One side of the cardinality.
+
+So, in our case, the Category entity represents the One side of the cardinality and the Product entity represents the Many side of the cardinality.
+
+    private String name;
+    @OneToMany(mappedBy = "category")
+    private List<Product> products;
+
+So, we have marked that the Category entity owns the Product entity and there can be many products that belong to one category.
+
+*************************************************************************
+We can do this by using the mappedBy attribute in the @OneToMany annotation.
+
 ########
 When a relationship is defined between 2 entities, in the entity that represents 1 of the M:1 Relationship, we use the (mappedBy = "entityName") attribute in the @OneToMany annotation.
-In our case, the relationship is between Product and Category is M:1, Product being the M and Category being the 1.
+In our case, the relationship is between Product and Category is M:1, Product being the M side of the cardinality and Category being 1.
+
 So, in the Category entity, we will use the following annotation:
 	@OneToMany(mappedBy = "category")
 	private List<Product> products;
 
-**********************************************
-Implementing Product and Category Repositories:
-1. Create the ProductRepository interface
+And in the Product entity, we will use the following annotation:
+	@ManyToOne
+  private Category category;
 
+**********************************************
+Implementing Product and Category Repositories and performing CRUD operations
+We will create 2 repositories:
+	1. ProductRepository
+	2. CategoryRepository
+	and have them extend the JpaRepository interface.
+1. Create the ProductRepository interface
+	@Repository
+		public interface ProductRepository
+			extends JpaRepository<Product, UUID> {
+	}
 2. Create the CategoryRepository interface
+	@Repository
+	public interface CategoryRepository
+					extends JpaRepository<Category, UUID> {
+	}
+
+	We will now use these repositories in the ProductServiceApplication class to perform CRUD operations on the Product and Category entities.
+	We will create a category and save it in the database using the category repo.
+	We will then create a product for this category and save it in the database using the product repo.
+
+			Category category = new Category();
+			category.setName("Apple Devices");
+			Category savedCategory = categoryRepository.save(category);
+
+			Product product = new Product();
+			product.setTitle("iPhone 15 Pro");
+			product.setDescription("The best iPhone Ever");
+			product.setCategory(savedCategory);
+
+			productRepository.save(product);
+
+	Then we will demonstrate a Read Operation by fetching the saved category from the database and then fetching all the products for the category from the database.
+
+			Optional<Category> optionalCategory1 = categoryRepository.findById(UUID.fromString("d818e0c7-8e39-45da-8ad9-20a607784389"));
+			if(!optionalCategory1.isEmpty()) {
+				Category category1 = optionalCategory1.get();
+				System.out.println("Category name is: " + category1.getName());
+				System.out.println("Printing all products in the category");
+				Thread.sleep(1000);
+				for (Product product1: category1.getProducts()) {
+        		System.out.println(product1.getTitle());
+        		System.out.println(product1.getDescription());
+        }
+			}
+			else {
+				System.out.println("Category not found");
+			}
+		}
