@@ -538,3 +538,21 @@ And then in the ProductServiceApplication class, we will create a price object a
 				inverseJoinColumns = @JoinColumn(name = "order_id")
 		)
 		private List<Order> orders;
+**** Cascades ****************************************************************
+Cascades are used to propagate the state changes from one entity to another entity.
+Now, we have an implementation of a Product such that in order to save a product, we need to save the category first and then save the product.
+We will now implement a cascade such that when we want to save a product, we don't need to save the category and order in advance.
+We do so by using the @Cascade annotation and using the CascadeType.Persist value.
+		@ManyToOne(cascade = CascadeType.PERSIST)
+		private Category category;
+		@OneToOne(cascade = CascadeType.PERSIST)
+		private Price price;
+##########
+ If we delete a product, we want to delete the price as well.
+ We can do so by using the CascadeType.REMOVE value.
+  So now in our Product entity, we will have the following annotations for the price field
+		    @OneToOne (cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+        private Price price;
+
+ Now, if we delete a product, the price will also be deleted.
+##########
