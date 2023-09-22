@@ -1,4 +1,6 @@
-****class-9:11Sep Database-1 ********
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-9:11Sep Intro To Spring Data JPA, ORM, Hibernate,JDBC, Entities, UUIDs $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Adding the database connection to the project
 1. Add the Spring Data JPA dependency to the pom.xml
@@ -145,7 +147,9 @@ Composition and aggregation are two types of relationships in object-oriented pr
     Aggregation is a weaker form of association where objects are related, but they can exist independently.
     In a UML diagram, association is typically represented by a line connecting classes, while composition is represented by a solid diamond shape on the side of the whole class, and aggregation is represented by an empty diamond shape.
 
-**Class - 2 on DB: Inheritance in Spring Data JPA**********
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$   Class- 2: 15 Sep2023: Backend-10: Databases, Inheritance and Relations   $$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Representing Inheritance in Spring Data JPA
 There are 4 types of inheritance in Spring Data JPA:
     1. Mapped SuperClass
@@ -470,3 +474,67 @@ We will create 2 repositories:
 				System.out.println("Category not found");
 			}
 		}
+********
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$ Class- 3: 18 Sep2023: Backend-11: Representing Cardinalities, Fetch_Types $$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+We have implemented a M:1 relationship between the Product and Category entities.
+We will now represent One To One and Many to Many cardinalities in our project.
+* Products can have many to many relationship with orders.
+
+* we will create a new entity called Order and create a many to many relationship between the Product and Order entities.
+
+* We will also create a one to one relationship between the Product and Price entities.
+
+* Let's put a default value to currency field using the @Column annotation.
+		@Column(columnDefinition = "varchar(3) default 'INR'")
+
+The Price entity will look like this:
+import jakarta.persistence.Entity; import lombok.Getter; import lombok.Setter;
+
+@Getter@ Setter
+@Entity(name="prices")
+public class Price extends BaseModel{
+    @Column(columnDefinition = "varchar(3) default 'INR'")
+    private String currency;
+    private double price;
+}
+
+And now our Product entity will also contain a Price field:
+		@OneToOne
+		private Price price;
+
+*********************************************
+		So we have represented implemented all the 4 relationships between entities:
+		1. One to One
+		2. Many to One
+		  Class Product{
+		    @ManyToOne
+        private Category category;
+        @OneToOne
+        private Price price;
+      }
+    3. One to Many
+    	Class Category{
+				@OneToMany(mappedBy = "category")
+				private List<Product> products;
+			}
+		4. Many to Many
+			Class Order{
+				@ManyToMany
+				private List<Product> products;
+			}
+And if ever we need to represent a relationship from both the entities, we can use a MappedBy annotation.
+***********************************************************
+We will create a price repository and create and save a price object.
+public interface PriceRepository extends JpaRepository<Price,Long> {
+}
+
+And then in the ProductServiceApplication class, we will create a price object and save it in the database.
+
+* We can also change the column header for the mapping table using the @JoinTable annotation.
+		@JoinTable(name = "product_orders",
+				joinColumns = @JoinColumn(name = "product_id"),
+				inverseJoinColumns = @JoinColumn(name = "order_id")
+		)
+		private List<Order> orders;

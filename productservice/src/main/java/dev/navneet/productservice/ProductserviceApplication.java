@@ -5,7 +5,9 @@ package dev.navneet.productservice;
 //import dev.navneet.productservice.inheritanceDemo.tableperclass.UserRepository;
 import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
+import dev.navneet.productservice.models.Price;
 import dev.navneet.productservice.repositories.CategoryRepository;
+import dev.navneet.productservice.repositories.PriceRepository;
 import dev.navneet.productservice.repositories.ProductRepository;
 //import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
@@ -21,11 +23,13 @@ public class ProductserviceApplication implements CommandLineRunner {
 
 	private final ProductRepository productRepository;
 	private final CategoryRepository categoryRepository;
+	private final PriceRepository priceRepository;
 
 	public ProductserviceApplication(ProductRepository productRepository,
-     CategoryRepository categoryRepository
+     CategoryRepository categoryRepository,
 	/* @Qualifier("tpc_mr") MentorRepository mentorRepository,
-       @Qualifier("tpc_ur") UserRepository userRepository*/ ) {
+       @Qualifier("tpc_ur") UserRepository userRepository*/
+									 PriceRepository priceRepository) {
 
 		this.productRepository = productRepository;
 		this.categoryRepository = categoryRepository;
@@ -33,6 +37,7 @@ public class ProductserviceApplication implements CommandLineRunner {
 		this.userRepository = userRepository;
 		 */
 
+		this.priceRepository = priceRepository;
 	}
 
 		public static void main(String[] args) {
@@ -60,12 +65,16 @@ public class ProductserviceApplication implements CommandLineRunner {
 			category.setName("Apple Devices");
 			Category savedCategory = categoryRepository.save(category);
 
+			Price price = new Price();
+			priceRepository.save(price);
+
 			Product product = new Product();
 			product.setTitle("iPhone 15 Pro");
 			product.setDescription("The best iPhone Ever");
 			product.setCategory(savedCategory);
-
+			product.setPrice(price);
 			productRepository.save(product);
+
 
 			Optional<Category> optionalCategory1 = categoryRepository.findById(UUID.fromString("d818e0c7-8e39-45da-8ad9-20a607784389"));
 			if(!optionalCategory1.isEmpty()) {
