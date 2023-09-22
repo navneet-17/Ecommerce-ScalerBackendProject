@@ -555,4 +555,149 @@ We do so by using the @Cascade annotation and using the CascadeType.Persist valu
         private Price price;
 
  Now, if we delete a product, the price will also be deleted.
-##########
+**** JPA Queries **************
+* Repositories are the class that allow us to access the database where our  models are stored.
+* We can use the repositories to perform CRUD operations on the database.
+* Every database operation is a query.
+* Every query will have to be written in the repository or in order words every query will be a part of a repository.
+* Spring Data JPA creates the queries for us based on the method names that we define in the repository.
+** The Spring Data JPA queries are further divided into 2 parts:
+1. Subject
+2. Predicate
+** The Subject is the entity on which we are performing the query.
+** The Predicate is the condition that we are applying on the Subject.
+
+Select * from product where title = 'iPhone 15 Pro';
+In the above query, the Subject is the Product entity and the Predicate is the condition that the title of the product should be 'iPhone 15 Pro'.
+
+Spring Data JPA query for the above query will be:
+findByTitle(String title);
+
+We can also use multiple predicates in the query.
+-- Get the product by title and price:
+     Product findByTitleAndPrice_Price(String title, Double price);
+
+We can get multiple products using the findAll method.
+-- Get all products by currency
+     List<Product> findAllByPrice_Currency(String currency);
+
+Implementing the above queries in the Application class:
+
+			List<Product> products = productRepository.findAllByPrice_Currency("INR");
+			System.out.println("Printing all products with currency INR");
+			for (Product product1: products) {
+				System.out.println(product1.getTitle());
+				System.out.print(" "+product1.getDescription());
+				System.out.print(" "+product1.getPrice().getCurrency());
+				System.out.print(" "+product1.getPrice().getPrice());
+			}
+		}
+Output --> Printing all products with currency INR
+iPhone 15 Pro The best iPhone Ever INR 100000.0
+ The best iPhone Ever INR 100000.0iPhone 15 Pro
+ The best iPhone Ever INR 100000.0iPhone 15 Pro
+ The best iPhone Ever INR 100000.0iPhone 15 Pro
+ The best iPhone Ever INR 100000.0iPhone 15 Pro
+ ***********************************************************************
+
+how exactly is this working?
+Spring Data JPA is using Hibernate to create the queries for us.
+Hibernate is an ORM (Object Relational Mapping) tool which internally uses JDBC to connect to the database.
+
+let's break down the flow for the query productRepository.findAllByPrice_Currency("INR") step by step:
+1. Spring Data JPA will use method name query derivation to automatically generate a query based on the method name.
+
+2. Spring Data JPA will parse the method name and will generate a JPQL (Java Persistence Query Language) query based on the method name.
+	  SELECT p FROM Product p WHERE p.price.currency = 'INR'
+
+3. Spring Data JPA will then use Hibernate to execute the query.
+		* Hibernate is the Object-Relational Mapping (ORM) framework used by Spring Data JPA.
+		* Hibernate is an implementation of the Java Persistence API (JPA).
+
+4. 	Hibernate takes the JPQL query and translates it into SQL. The SQL query might look something like this:
+		SELECT p.id, p.title, p.description, p.category_id, p.price_id
+		FROM product p
+		INNER JOIN price pr ON p.price_id = pr.id
+		WHERE pr.currency = 'INR'
+
+5. Hibernate then uses JDBC to execute the SQL query on the database.
+		* The JDBC (Java Database Connectivity) driver is a platform-independent interface for connecting Java applications to a database.
+		* It handles the communication between the Java application and the MySQL database.
+
+6. The MySQL database executes the SQL query and returns the results to the JDBC driver.
+
+7. Hibernate Result Set Mapping:
+   	Hibernate takes the results from the database and converts them back into Java objects.
+
+8. Hibernate returns the Java objects to Spring Data JPA.
+
+9. Spring Data JPA Repository:
+   Finally, Spring Data JPA takes the Java objects representing the records and provides them back to our application.
+
+**************************************
+
+Some more examples of the JPA queries:
+** Count the number of products in the database for a particular currency:
+		Long count = productRepository.countByPrice_Currency("INR");
+		System.out.println("Number of products with currency INR: " + count);
+**************************************
+
+* We can also write custom queries in the repository.
+To do so, we need to use the @Query annotation.
+
+@Query("select p from Product p where title = :title ", nativeQuery = true)
+List<Product> findProductByTitle(@Param("title") String title);
+
+And then call this from the Application class:
+List<Product> products1 = productRepository.findAllProductsByTitle("iPhone 15 Pro");
+			System.out.println("Printing all products with title iPhone 15 Pro");
+			for (Product product1: products1) {
+				System.out.println(product1.getTitle());
+				System.out.print(" "+product1.getDescription());
+				System.out.print(" "+product1.getPrice().getCurrency());
+				System.out.print(" "+product1.getPrice().getPrice());
+			}
+*****************************************************************************************************************
+Native Queries:
+* We can also write native queries in the repository.
+
+We typically create a native query when we want to use a database-specific feature that is not supported by JPQL.
+--> Let's say if we have to use a MySQL specific function, then we will have to use a native query.
+--> Or if there's a chance that we will need to migrate to a different database in future which has a different query language support, we write all the queries in another file as place holders and then use these in our actual repository files .
+--> This helps us in migrating to a different database in future, where we can just change the values of the placeholders and the queries will work fine.
+
+example:
+	We will create a CustomQueries interface file and create native queries in it.
+
+	public interface CustomQueries {
+		    String FIND_ALL_BY_TITLE = "select * from product join product_orders " +
+                "on product.id = product_orders.product_id where title = :iPhone 15 Pro";
+	}
+
+	And then we will use this query in the ProductRepository file.
+	    @Query(value = CustomQueries.FIND_ALL_BY_TITLE, nativeQuery = true)
+      List<Product> findAllByTitle(String naman);
+
+******** Hibernate query Language (HQL) *********
+Hibernate Query Language (HQL) is an object-oriented query language, similar to SQL, but instead of operating on tables and columns, HQL works with persistent objects and their properties.
+HQL queries are translated by Hibernate into conventional SQL queries, which in turns perform action on database.
+
+Below will be the HQL query for the above native query:
+    @Query("select Product from Product where Product.price.currency = :currency and Product.title = :naman")
+    List<Product> doSomething(String naman, String currency);
+
+--> HQL is database independent, as everything that we query will be in terms of the entities and not the tables.
+-> We can name it anything we want, like we used doSomething here.
+
+Our approach in real-world should be prioritized as follows to fetch data from the database:
+1. Use the Spring Data JPA method name query derivation to automatically generate a query based on the method name.
+2. Use the Hibernate Query Language (HQL) to write a query (Gives a compile time safety).
+3. Use the Native Query to write a query, MySQl specific or whatever db we are using.
+*************************************************************************************
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$ Class- 4: 20 Sep2023: Backend-12: Databases: N + 1 Problem, Fetch Type, Fetch Modes $$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
+* We will now demonstrate the N+1 problem.

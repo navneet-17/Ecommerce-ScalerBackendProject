@@ -14,6 +14,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -90,6 +91,30 @@ public class ProductserviceApplication implements CommandLineRunner {
 			}
 			else {
 				System.out.println("Category not found");
+			}
+
+			List<Product> products = productRepository.findAllByPrice_Currency("INR");
+			System.out.println("Printing all products with currency INR");
+			for (Product product1: products) {
+				System.out.println(product1.getTitle());
+				System.out.print(" "+product1.getDescription());
+				System.out.print(" "+product1.getPrice().getCurrency());
+				System.out.print(" "+product1.getPrice().getPrice());
+			}
+
+		//** Count the number of products in the database for a particular currency:
+			Long count = productRepository.countByPrice_Currency("INR");
+			System.out.println("Number of products with currency INR: " + count);
+
+
+		//** Get all the products by title
+			List<Product> products1 = productRepository.findAllProductsByTitle("iPhone 15 Pro");
+			System.out.println("Printing all products with title iPhone 15 Pro");
+			for (Product product1: products1) {
+				System.out.println(product1.getTitle());
+				System.out.print(" "+product1.getDescription());
+				System.out.print(" "+product1.getPrice().getCurrency());
+				System.out.print(" "+product1.getPrice().getPrice());
 			}
 		}
 }

@@ -1,14 +1,21 @@
 package dev.navneet.productservice.services;
 
 import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.repositories.ProductRepository;
 import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductServiceClient;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+//@Primary
 @Service("selfProductServiceImpl")
 public class SelfProductServiceImpl implements ProductService {
+    private final ProductRepository productRepository;
 
+    public SelfProductServiceImpl(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
     @Override
     public GenericProductDto createProduct(GenericProductDto product) {
         return null;
