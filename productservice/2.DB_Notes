@@ -995,6 +995,57 @@ public class CategoryController {
         return categoryDto;
     }
 }
-
 ******************************************************************************************************
 * We will now demonstrate the N+1 problem.
+* The N+1 problem occurs when we have a collection of entities and we want to fetch the related entities for each entity in the collection.
+* For example, we have a list of categories and we want to fetch the products for each category.
+* In the context of a database relationship between categories and products, the N+1 problem refers to a scenario where, when we fetch a list of categories, and each category has a collection of associated products, we end up making N+1 queries to the database.
+
+####   The problem: #########################################################
+
+Let's see this in detail:
+Here's a more detailed explanation:
+--> N represents the number of categories you're retrieving.
+--> 1 represents the initial query to get the list of categories.
+--> +1 represents an additional query for each category to retrieve its associated products.
+		For example, if we have 10 categories and each category has 5 products, without addressing the N+1 problem, we would end up making 11 queries:
+				1 query to get the list of categories.
+				10 additional queries (one for each category) to get their associated products.
+
+* This can lead to a significant number of database queries, especially if we're dealing with large datasets. It can slow down our application and put unnecessary load on the database server.
+
+####  Solution to the N+1 problem: #########################################################
+
+To fix the N+1 problem is by using techniques like eager loading or batch fetching in the ORM configuration. This allows us to retrieve related entities in a more efficient manner.
+In Spring Data JPA, for example, we can use @OneToMany or @ManyToMany annotations with fetch = FetchType.LAZY or configure batch fetching to control how related entities are loaded.
+
+Implementation:
+We have a Category entity with a one-to-many relationship to Product. The fetch = FetchType.LAZY attribute tells Hibernate to load the products of a category lazily, meaning they will only be fetched from the database when accessed.
+--- Category Entity:---
+   @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+       private List<Product> products;
+
+Similarly, in the Product entity, the category is marked with fetch = FetchType.LAZY. This means that when we retrieve a product, the associated category will only be loaded when accessed.
+--- Product Entity:---
+	@ManyToOne(fetch = FetchType.LAZY)
+		private Category category;
+
+Using FetchType.LAZY:
+	Now, let's assume we want to retrieve all categories and their associated products. With fetch = FetchType.LAZY, the products won't be loaded immediately:
+	--- List<Category> categories = categoryRepository.findAll();
+		At this point, categories is a list of categories, but the associated products haven't been loaded from the database yet.
+
+	Accessing Products:
+	When we access the products of a category, Hibernate will issue a separate query to the database to fetch the products:
+   for (Category category : categories) {
+       List<Product> products = category.getProducts(); // This triggers a query to get the products for this category
+   }
+
+This way, we avoid the N+1 problem. If we hadn't used fetch = FetchType.LAZY, Hibernate would have fetched all products eagerly, resulting in more queries.
+##############################################################################################
+
+
+
+
+
+

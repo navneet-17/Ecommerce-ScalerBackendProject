@@ -2,16 +2,14 @@ package dev.navneet.productservice.controllers;
 
 import dev.navneet.productservice.dtos.CategoryDto;
 import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.dtos.GetProductTitlesRequestDto;
 import dev.navneet.productservice.dtos.ProductDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
 import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
 import dev.navneet.productservice.services.CategoryService;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +38,14 @@ public class CategoryController {
         categoryDto.setProductList(productDtos);
         return categoryDto;
     }
+
+    @GetMapping("/titles/{uuid}")
+    public List<String> getProductTitles(@PathVariable("uuid") String uuid) {
+        return categoryService.getProductTitles(uuid);
+    }
+
+
+
 }
 //    public List<ProductDto> getCategory(@PathVariable("id") String uuid) {
 //        return productDtos;
