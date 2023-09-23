@@ -895,10 +895,106 @@ We will update the service Impl to return the category object from the repositor
         return category;
     }
 *************************************************************************************
+implementing the Controller to return a category name:
+@RestController
+@RequestMapping("/categories")
+public class CategoryController {
+    private CategoryService categoryService;
+    public CategoryController(CategoryService categoryService){
+        this.categoryService = categoryService;
+    }
+    @GetMapping("{id}")
+    public String getCategoryById(@PathVariable("id") String uuid) {
+        Category category = categoryService.getCategoryById(uuid);
+        System.out.println("Fetched Category Name is : "+ category.getName());
+        return category.getName();
+    }
+}
 
+*********************
+Now let's try to return the product list for a category:
+@RestController
+@RequestMapping("/categories")
+public class CategoryController {
+    private CategoryService categoryService;
+    public CategoryController(CategoryService categoryService){
+        this.categoryService = categoryService;
+    }
+    @GetMapping("{id}")
+    public Category getCategoryById(@PathVariable("id") String uuid) {
+        Category category = categoryService.getCategoryById(uuid);
+        System.out.println("Fetched Category Name is : "+ category.getName());
+        return category.getName();
+    }
+}
 
+--> We may encounter the infinite recursion problem here. This is because Category has a list of products and Product has a category object. So we have a cyclic dependency here, hence we have an infinite recursion problem.
+--> To solve this, we can return Dtos instead of the actual entities.
+@Getter@Setter
+public class ProductDto {
+    private String title;
+    private String description;
+    private String image;
+    private Price price;
+}
 
+@RestController
+@RequestMapping("/categories")
+public class CategoryController {
+    private CategoryService categoryService;
+    public CategoryController(CategoryService categoryService){
+        this.categoryService = categoryService;
+    }
+    @GetMapping("/{id}")
+    public List<ProductDto> getCategory(@PathVariable("id") String uuid) {
+        List<Product> products = categoryService.getCategoryById(uuid).getProducts();
+        List<ProductDto> productDtos = new ArrayList<>();
+        for (Product product: products) {
+            ProductDto productDto = new ProductDto();
+            productDto.setDescription(product.getDescription());
+            productDto.setTitle(product.getTitle());
+            productDto.setImage(product.getImage());
+            productDto.setPrice(product.getPrice());
+            productDtos.add(productDto);
+        }
+        return productDtos;
+    }
+}
 
+Similarly, we can create a CategoryDto and return it from the controller. This category dto will have a list of product dtos. This will solve the infinite recursion problem.
+
+@Getter @Setter
+public class CategoryDto {
+    private String name;
+    private List<ProductDto> products;
+}
+
+And now the controller will look like this:
+@RestController
+@RequestMapping("/categories")
+public class CategoryController {
+    private CategoryService categoryService;
+    public CategoryController(CategoryService categoryService){
+        this.categoryService = categoryService;
+    }
+    @GetMapping("/{id}")
+    public CategoryDto getCategory(@PathVariable("id") String uuid) {
+        List<Product> products = categoryService.getCategoryById(uuid).getProducts();
+        List<ProductDto> productDtos = new ArrayList<>();
+        for (Product product: products) {
+            ProductDto productDto = new ProductDto();
+            productDto.setDescription(product.getDescription());
+            productDto.setTitle(product.getTitle());
+            productDto.setImage(product.getImage());
+            productDto.setPrice(product.getPrice());
+            productDtos.add(productDto);
+        }
+        CategoryDto categoryDto = new CategoryDto();
+        categoryDto.setName(categoryService.getCategoryById(uuid).getName());
+        categoryDto.setProducts(productDtos);
+        return categoryDto;
+    }
+}
 
 ******************************************************************************************************
 * We will now demonstrate the N+1 problem.
