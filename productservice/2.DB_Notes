@@ -698,6 +698,154 @@ Our approach in real-world should be prioritized as follows to fetch data from t
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$$ Class- 4: 20 Sep2023: Backend-12: Databases: N + 1 Problem, Fetch Type, Fetch Modes $$$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Lazy v/s Eager Fetching:
+* By default, all the relationships in Spring Data JPA are lazy.
+* Lazy fetching means that the related entities are not loaded until they are explicitly requested.
+* Eager fetching means that the related entities are loaded immediately when the parent entity is loaded.
+
+*Consider the following example:
+  We have a Product entity and a Category entity.
+  The Product entity has a Many to One relationship with the Category entity.
+  --> If we want to fetch the details of a category, we query on the category table with the category id.
+  --> Now, these category may have all the products that belong to that category, but we do not want to fetch all the products for that category, we just want to fetch the specific category details.
+
+ So, these products under the category will be lazing loaded by default, i.e. they will be loaded only when we explicitly request for them, and not return every time when we query a category.
+
+ The query will look something like this:
+  	select * from category where id = 1;
+
+On the contrary, imagine if all the products under the category are eagerly loaded when we query for a specific category using its id, then the query will look something like this:
+		select * from category c join product p on c.id = p.category_id where c.id = 1;
+
+Let's lok at the Cons and Pros of Such Eager Loading:
+
+CONS:
+- The query will be very slow as it will be joining the category table and the product table.
+- The query will return a lot of duplicate data as the category details will be repeated for every product under the category.
+- The query will return a lot of null values as the product table will not have the category details for every product.
+- A lot of memory will be wasted in storing the duplicate data and the null values.
+
+PROS:
+- There will be only 1 database call to fetch the category details and the product details.
+- The query will be very fast as it will be just querying the category table.
+- The query will return the category details along with the product details in a single query.
+
+Spring Data JPA provides us with 2 ways to fetch the related entities:
+1. Fetch Type
+2. Fetch Mode
+
+Fetch Type:
+	Fetch Type is used to specify whether the related entities should be lazily loaded or eagerly loaded.
+	Eager Fetch:
+	--> An eager fetched attribute is fetched immediately along with the parent entity.
+	Lazy Fetch:
+	--> A Lazy fetched attribute is fetched only when it is accessed.
+
+So, applying this to our Category class:
+Class Category{
+  int category_id; [Eager]
+  String name; [Eager]
+  User creator; [Eager]
+  private List<Product> products; [Lazy]
+}
+
+By default, for collection attributes,the fetch type is lazy
+and for non-collection attributes, the fetch type is eager.
+
+*******************************************************************************
+  This is how we mark the fetch manually for any attribute:
+	@OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+	private List<Product> products;
+*******************************************************************************
+
+Let's lok at the Cons and Pros of Such Lazy Loading:
+
+PROS:
+- This enables us to fetch only an object of the parent class without fetching the objects of the child class.
+- We can fetch the child class object on demand when it is needed.
+  --> Improves faster query execution time.
+  --> Reduces memory consumption.
+
+CONS:
+	--> System may behave unexpectedly if we try to access the child class object when it is not loaded.
+	--> We need to write additional code to handle the lazy loading of the child class objects.
+*********************************************************************
+Implementing the Lazy and Eager Fetching in our project:
+
+Optional<Category> optionalCategory1 = categoryRepository.findById(UUID.fromString("1fa45539-11d9-4e1c-a04f-3d2d494d25f2"));
+	if(!optionalCategory1.isEmpty()) {
+				Category category1 = optionalCategory1.get();
+				System.out.println("Category name is: " + category1.getName());
+				System.out.println("Printing all products in the category");
+				Thread.sleep(1000);
+	}
+	else {
+			System.out.println("Category not found");
+	}
+
+			List<Product> products = productRepository.findAllByPrice_Currency("INR");
+			System.out.println("Printing all products with currency INR");
+  		for (Product product1: products) {
+			System.out.println(product1.getTitle());
+			System.out.print(" "+product1.getDescription());
+  		System.out.print(" "+product1.getPrice().getCurrency());
+   		System.out.print(" "+product1.getPrice().getPrice());
+}
+
+Now, there is no join with the product table for the category fetched for the passed category Id.
+
+This happens because the Spring Data JPA fetches only the Categories and not the Products, so till the time the product is not fetched, the Product object instance is replaced by a proxy object- PersistentBag.
+
+This is because the fetch type for the products attribute in the Category class is Lazy.
+** Every repository call to the database in Spring Data JPA is a transaction,
+** So, the transaction ends as soon as the findById method ends, and the proxy object is returned instead of the actual object.
+This is similar to the fact that in SQL, every SQL query is a transaction of 1 statement.
+
+** We can only LAZY Load an object of the child class when we are inside the transaction, the same transaction which fetched the parent object.
+So if we use the @Transactional annotation on the method, then the method will be executed inside a transaction, and now we will have the products being returned for the category.
+@Transactional
+			public void run(String... args) throws Exception {
+						// Demonstrate Lazy Loading
+      			Optional<Category> optionalCategory1 = categoryRepository.findById
+      					(UUID.fromString("1fa45539-11d9-4e1c-a04f-3d2d494d25f2"));
+      			if(!optionalCategory1.isEmpty()) {
+      				Category category1 = optionalCategory1.get();
+      				System.out.println("Category name is: " + category1.getName());
+      				System.out.println("Printing all products in the category");
+      				Thread.sleep(1000);
+
+      				//Trying to fetch the products from the category
+      				List<Product> products = category1.getProducts();
+      				Thread.sleep(1000);
+
+      				for (Product product1: products) {
+      					System.out.println(" Title: " + product1.getTitle());
+      					System.out.println(" Description: "+product1.getDescription());
+      					System.out.println(" Currency: "+product1.getPrice().getCurrency());
+      					System.out.println(" Price: "+product1.getPrice().getPrice());
+      				}
+      			}
+      			else {
+      				System.out.println("Category not found");
+      			}
+      }
+
+      Result:
+      Category name is: Apple Devices
+      Printing all products in the category
+       Title: iPhone 15 Pro
+       Description: The best iPhone Ever
+       Currency: INR
+       Price: 100000.0
 
 
+
+
+
+
+
+
+
+
+******************************************************************************************************
 * We will now demonstrate the N+1 problem.
