@@ -32,10 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query(value = CustomQueries.FIND_ALL_BY_TITLE, nativeQuery = true)
     List<Product> findAllByTitle(String naman);
 
-    // Using Hibernate Query Language (HQL) to get all the products with a specific title:
 
-//    @Query("select products from products where products.price.currency = :currency and products.title = :naman")
-//    List<Product> readAllByTitle(String naman, String currency);
 
 }
 
