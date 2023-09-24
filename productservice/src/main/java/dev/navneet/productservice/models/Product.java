@@ -16,8 +16,4 @@ public class Product extends BaseModel {
 
     @OneToOne (cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     private Price price;
-
-    public String getId() {
-        return super.getId();
-    }
 }

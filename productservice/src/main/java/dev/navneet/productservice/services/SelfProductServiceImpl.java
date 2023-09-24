@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Primary
+//@Primary
 @Service("selfProductServiceImpl")
 public class SelfProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
@@ -62,7 +62,7 @@ public class SelfProductServiceImpl implements ProductService {
 
     private ProductDto convertProductToProductDto(Product product){
         ProductDto productDto = new ProductDto();
-        productDto.setId(product.getId());
+        productDto.setId(String.valueOf(product.getUuid()));
         productDto.setDescription(product.getDescription());
         productDto.setTitle(product.getTitle());
         productDto.setImage(product.getTitle() + ".jpg");
