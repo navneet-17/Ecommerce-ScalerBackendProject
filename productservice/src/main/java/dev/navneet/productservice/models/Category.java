@@ -44,6 +44,9 @@ public class Category extends BaseModel {
     public void setProducts(List<Product> products) {
         this.products = products;
     }
+    public String getId() {
+        return super.getId();
+    }
 }
 
 

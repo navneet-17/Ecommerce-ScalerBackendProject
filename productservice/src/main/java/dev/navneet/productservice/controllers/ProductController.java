@@ -4,11 +4,13 @@ import dev.navneet.productservice.dtos.ExceptionDto;
 import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
 import dev.navneet.productservice.services.ProductService;
+import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController

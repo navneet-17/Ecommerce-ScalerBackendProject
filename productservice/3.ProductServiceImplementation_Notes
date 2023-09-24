@@ -1,0 +1,73 @@
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ Implementing the product service APIs -- Assignment $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Overall Tasks to be done - Implement the below 7 APIs:
+	1. get all the products.
+	2. get a single product.
+	3. get all the categories.
+	4. get all the products in a single category.
+	5. add a new product.
+	6. update a product.
+	7. delete a Product.
+
+1. Make the SelfProductServiceImpl class implement the ProductService interface.
+2. Make this as the primary bean for the ProductService interface using the @Primary annotation, comment the same bean in the ProductServiceImpl class.
+3. Comment everything out in the Product Service Application class; just keep the main method that comes default with the SpringBoot Setup.
+. Implement the methods in the ProductService interface.
+. Use the ProductRepository to perform the CRUD operations.
+
+********************************************************************************************************************************************
+1. get all the products.
+	--> Made a method getId to return the UUID as a String. in the Base Class.
+			    protected String getId() {
+              // method to convert the UUID to String and return it to the DTOs
+              return uuid.toString();
+           }
+	--> All the entities will extend the Base class and call this above method using super to get the respective String version of the Id from the uuid.
+	--> Also changed the id from Long to String for the FakeStore DTO.
+--> In the ProductServiceImpl class, we will implement the getAllProducts() method.
+						* use the ProductRepository to get all the products and then convert them to DTOs and return them.
+						* use the convertProductToProductDto() method to convert the Product to ProductDto.
+						* use the convertProductDtoToGenericProductDto() method to convert the ProductDto to GenericProductDto.
+						* return the list of GenericProductDto.
+
+						Code Below:
+
+					     public List<GenericProductDto> getAllProducts() {
+                   List<Product> products = productRepository.findAll();
+                   List<ProductDto> productDtos = new ArrayList<>();
+                   for (Product product: products) {
+                       productDtos.add(convertProductToProductDto(product));
+                   }
+                   // Convert the list of ProductDto to list of GenericProductDto using Streams and Lambda
+                    List<GenericProductDto> genericProductDtos = productDtos.stream()
+                           .map(this::convertProductDtoToGenericProductDto)
+                           .collect(Collectors.toList());
+
+                   return genericProductDtos;
+               }
+
+                   private ProductDto convertProductToProductDto(Product product){
+                       ProductDto productDto = new ProductDto();
+                       productDto.setId(product.getId());
+                       productDto.setDescription(product.getDescription());
+                       productDto.setTitle(product.getTitle());
+                       productDto.setImage(product.getTitle() + ".jpg");
+                       productDto.setPrice(product.getPrice());
+                       productDto.setCategory(product.getCategory());
+                       return productDto;
+                   }
+
+                   private GenericProductDto convertProductDtoToGenericProductDto(ProductDto productDto){
+                       GenericProductDto genericProductDto = new GenericProductDto();
+                       genericProductDto.setId(productDto.getId());
+                       genericProductDto.setImage(productDto.getImage());
+                       genericProductDto.setDescription(productDto.getDescription());
+                       genericProductDto.setTitle(productDto.getTitle());
+                       genericProductDto.setPrice(productDto.getPrice().getPrice());
+                       genericProductDto.setCategory(productDto.getCategory().getName());
+                       return genericProductDto;
+                   }
+
+###############################################################################################################################################################################################
+

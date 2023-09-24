@@ -1,6 +1,5 @@
 package dev.navneet.productservice.repositories;
 
-import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;

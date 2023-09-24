@@ -17,4 +17,8 @@ public class Product extends BaseModel {
     @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     @JoinColumn
     private Price price;
+
+    public String getId() {
+        return super.getId();
+    }
 }
