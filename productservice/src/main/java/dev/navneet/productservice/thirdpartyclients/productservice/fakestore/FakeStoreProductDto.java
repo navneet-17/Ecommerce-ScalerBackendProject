@@ -7,8 +7,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class FakeStoreProductDto {
-//    private Long id; // changing long to String as the FakeStore API returns String
-    private String id;
+    private Long id;
     private String title;
     private double price;
     private String category;

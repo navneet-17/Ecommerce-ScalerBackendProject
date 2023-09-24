@@ -19,9 +19,6 @@ public class Order extends BaseModel{
     )
     private List<Product> product;
 
-    public String getId() {
-        return super.getId();
-    }
 }
 
 
