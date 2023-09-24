@@ -6,8 +6,10 @@ import dev.navneet.productservice.models.Price;
 
 @Getter@Setter
 public class ProductDto {
+    private String id;
     private String title;
     private String description;
     private String image;
     private Price price;
+    private Category category;
 }

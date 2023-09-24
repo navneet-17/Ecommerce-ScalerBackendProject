@@ -17,4 +17,9 @@ public class BaseModel {
     @GenericGenerator(name = "navneet-uuid", strategy = "uuid2")
     @Column(name = "id", columnDefinition = "binary(16)", nullable = false, updatable = false)
     private UUID uuid;
+
+    protected String getId() {
+        // method to convert the UUID to String and return it to the DTOs
+        return uuid.toString();
+     }
 }

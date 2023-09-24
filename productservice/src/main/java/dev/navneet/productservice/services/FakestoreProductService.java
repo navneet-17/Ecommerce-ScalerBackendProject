@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-@Primary
+//@Primary
 @Service("fakestoreProductService")
 public class FakestoreProductService implements ProductService{
 // This service class will all have the method implementations to interact with the Fakestore API.

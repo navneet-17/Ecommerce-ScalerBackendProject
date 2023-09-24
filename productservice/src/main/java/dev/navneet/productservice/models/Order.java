@@ -18,6 +18,10 @@ public class Order extends BaseModel{
             inverseJoinColumns = @JoinColumn(name = "order_id")
     )
     private List<Product> product;
+
+    public String getId() {
+        return super.getId();
+    }
 }
 
 

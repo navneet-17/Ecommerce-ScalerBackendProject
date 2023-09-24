@@ -13,5 +13,9 @@ public class Price extends BaseModel {
     @Column(columnDefinition = "varchar(3) default 'INR'")
     private String currency;
     private double price;
+
+    public String getId() {
+        return super.getId();
+    }
 }
 
