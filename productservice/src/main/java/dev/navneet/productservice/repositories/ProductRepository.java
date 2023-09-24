@@ -1,15 +1,13 @@
 package dev.navneet.productservice.repositories;
 
 import dev.navneet.productservice.models.Product;
-import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
@@ -17,6 +15,10 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     Product findByTitle(String title);
      //Get a product by title and price
      Product findByTitleAndPrice_Price(String title, Double price);
+
+    //Get a product by id
+    Optional<Product> findById(UUID id);
+
 
      //Get all products by currency
      List<Product> findAllByPrice_Currency(String currency);
