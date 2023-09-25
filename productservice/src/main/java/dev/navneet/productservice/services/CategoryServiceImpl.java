@@ -14,6 +14,7 @@ import java.util.UUID;
 @Service
 public class CategoryServiceImpl implements CategoryService{
     private final CategoryRepository categoryRepository;
+    CategoryService categoryService;
 
     public CategoryServiceImpl(CategoryRepository categoryRepository){
         this.categoryRepository = categoryRepository;
@@ -43,6 +44,11 @@ public class CategoryServiceImpl implements CategoryService{
         );
 
         return titles;
+    }
+
+    @Override
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAll();
     }
 
 }

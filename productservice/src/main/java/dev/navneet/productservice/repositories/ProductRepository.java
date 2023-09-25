@@ -1,5 +1,7 @@
 package dev.navneet.productservice.repositories;
 
+import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,9 +36,30 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query(value = CustomQueries.FIND_ALL_BY_TITLE, nativeQuery = true)
     List<Product> findAllByTitle(String naman);
 
+    List<Product> findByCategory(Category category);
 
+    @Query(nativeQuery = true, value = CustomQueries.GET_ALL_PRODUCT_BY_CATEGORY)
+    List<Product> getAllProductByCategory(String categoryName);
+
+    @Query(nativeQuery = true, value = CustomQueries.GET_ALL_PRODUCT_CATEGORY)
+    List<String> getAllProductCategory();
+
+    @Query(value = CustomQueries.FIND_ALL_PRODUCT, nativeQuery = true)
+    List<Product> findAllProducts();
+
+    List<Product> findAll();
 
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

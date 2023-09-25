@@ -9,6 +9,7 @@ import dev.navneet.productservice.models.Price;
 import dev.navneet.productservice.repositories.CategoryRepository;
 import dev.navneet.productservice.repositories.PriceRepository;
 import dev.navneet.productservice.repositories.ProductRepository;
+import dev.navneet.productservice.services.CategoryService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
@@ -46,6 +47,7 @@ public class ProductserviceApplication{// implements CommandLineRunner {
 
 		public static void main(String[] args) {
 			SpringApplication.run(ProductserviceApplication.class, args);
+
 		}
 //@Transactional
 //		@Override
