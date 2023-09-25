@@ -11,12 +11,17 @@ import java.util.UUID;
 
 public interface ProductService {
 
-    GenericProductDto createProduct(ProductDto productDto);
-    GenericProductDto getProductById(UUID id) throws NotFoundException;
+    ProductDto createProduct(ProductDto productDto);
+    ProductDto getProductById(UUID id) throws NotFoundException;
 
-    List<GenericProductDto> getAllProducts();
+    List<ProductDto> getAllProducts();
 
-    GenericProductDto deleteProductById(UUID id) throws NotFoundException;
-    GenericProductDto updateProductById(UUID id, ProductDto productDto);
+    ProductDto deleteProductById(UUID id) throws NotFoundException;
+    ProductDto updateProductById(UUID id, ProductDto productDto)throws NotFoundException;
+
+    List<String> getAllProductCategories();
+
+    List<ProductDto> getAllProductsInCategory(String categoryName);
+
 
 }

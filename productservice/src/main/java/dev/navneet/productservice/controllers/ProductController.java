@@ -27,32 +27,43 @@ public class ProductController {
         this.productService = productService;
     }
     @PostMapping("")
-    public GenericProductDto createProduct(@RequestBody ProductDto productDto) {
+    public ProductDto createProduct(@RequestBody ProductDto productDto) {
         return productService.createProduct(productDto);
     }
     @GetMapping("/")
-    public List<GenericProductDto> getAllProducts() {
+    public List<ProductDto> getAllProducts() {
         return productService.getAllProducts();
     }
 
     @GetMapping("{id}")
-    public GenericProductDto getProductById(@PathVariable("id") String id) throws NotFoundException {
+    public ProductDto getProductById(@PathVariable("id") String id) throws NotFoundException {
         UUID uuid = UUID.fromString(id);
         return productService.getProductById(uuid);
     }
 
 
     @DeleteMapping("{id}")
-    public GenericProductDto deleteProductById(@PathVariable("id") String id) throws NotFoundException {
+    public ProductDto deleteProductById(@PathVariable("id") String id) throws NotFoundException {
         UUID uuid = UUID.fromString(id);
         return productService.deleteProductById(uuid);
     }
 
     @PutMapping("{id}")
-    public GenericProductDto updateProductById(@PathVariable("id") String id, @RequestBody ProductDto productDto) {
+    public ProductDto updateProductById(@PathVariable("id") String id, @RequestBody ProductDto productDto) {
         UUID uuid = UUID.fromString(id);
         return productService.updateProductById(uuid,productDto);
     }
+
+    @GetMapping("/categories")
+    public List<String> getAllProductCategories() {
+        return productService.getAllProductCategories();
+    }
+
+    @GetMapping("/categories/{categoryName}")
+    public List<ProductDto> getAllProductsInCategory(@PathVariable("categoryName") String categoryName) {
+        return productService.getAllProductsInCategory(categoryName);
+    }
+
 
     @ExceptionHandler(NotFoundException.class)
     private ResponseEntity<ExceptionDto> handleNotFoundException(NotFoundException notFoundException) {
