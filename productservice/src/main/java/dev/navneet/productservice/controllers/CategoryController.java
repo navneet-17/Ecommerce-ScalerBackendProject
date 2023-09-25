@@ -20,23 +20,23 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-//    @GetMapping("/{id}")
-//    public CategoryDto getCategory(@PathVariable("id") String uuid) {
-//        List<Product> products = categoryService.getCategoryById(uuid).getProducts();
-//        List<ProductDto> productDtos = new ArrayList<>();
-//        for (Product product: products) {
-//            ProductDto productDto = new ProductDto();
-//            productDto.setDescription(product.getDescription());
-//            productDto.setTitle(product.getTitle());
-//            productDto.setImage(product.getImage());
-//            productDtos.add(productDto);
-//        }
-//        CategoryDto categoryDto = new CategoryDto();
-//        categoryDto.setCategoryName(categoryService.getCategoryById(uuid).getName());
-//        categoryDto.setProductList(productDtos);
-//        return categoryDto;
-//
-//    }
+    @GetMapping("/{id}")
+    public CategoryDto getCategory(@PathVariable("id") String uuid) {
+        List<Product> products = categoryService.getCategoryById(uuid).getProducts();
+        List<ProductDto> productDtos = new ArrayList<>();
+        for (Product product: products) {
+            ProductDto productDto = new ProductDto();
+            productDto.setDescription(product.getDescription());
+            productDto.setTitle(product.getTitle());
+            productDto.setImage(product.getImage());
+            productDtos.add(productDto);
+        }
+        CategoryDto categoryDto = new CategoryDto();
+        categoryDto.setCategoryName(categoryService.getCategoryById(uuid).getName());
+        categoryDto.setProductList(productDtos);
+        return categoryDto;
+
+    }
 
     @GetMapping()
     public List<CategoryDto> getAllCategories() {
