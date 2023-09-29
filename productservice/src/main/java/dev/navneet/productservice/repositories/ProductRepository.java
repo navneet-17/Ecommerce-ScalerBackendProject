@@ -1,5 +1,6 @@
 package dev.navneet.productservice.repositories;
 
+import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,10 +33,17 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query(value = CustomQueries.FIND_ALL_BY_TITLE, nativeQuery = true)
     List<Product> findAllByTitle(String naman);
 
+    List<Product> findAllByCategoryIn(List<Category> categories);
+
     // Using Hibernate Query Language (HQL) to get all the products with a specific title:
 
 //    @Query("select products from products where products.price.currency = :currency and products.title = :naman")
 //    List<Product> readAllByTitle(String naman, String currency);
+//
+//    @Query("select products  from products  where products .category.uuid in :uuids")
+//    List<Product> findAllByCategoryIn(List<UUID> uuids);
+
+
 
 }
 

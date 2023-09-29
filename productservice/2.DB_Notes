@@ -758,7 +758,7 @@ and for non-collection attributes, the fetch type is eager.
 	private List<Product> products;
 *******************************************************************************
 
-Let's lok at the Cons and Pros of Such Lazy Loading:
+Let's look at the Cons and Pros of Such Lazy Loading:
 
 PROS:
 - This enables us to fetch only an object of the parent class without fetching the objects of the child class.
@@ -884,6 +884,8 @@ public class CategoryServiceImpl implements CategoryService{
 #### We have made the repository method return an Optional object as the findById method can return a null value.
 This will help us to handle the null value in the controller. We no longer need to handle Null Pointer Exception in the controller. We can just check if the optional object is empty or not, and then directly get the products from the category in the controller.
 
+***** Returning a List<Products> for a specific Category: ******************************************************
+
 We will update the service Impl to return the category object from the repository.
     public Category getCategoryById(String uuid){
         Optional<Category> optionalCategory = categoryRepository.findById(UUID.fromString(uuid));
@@ -894,8 +896,12 @@ We will update the service Impl to return the category object from the repositor
         List<Product> products = category.getProducts();
         return category;
     }
-*************************************************************************************
-implementing the Controller to return a category name:
+
+Postman query:
+
+
+*****  Implementing the Controller to return a category name: ************************************************************************
+
 @RestController
 @RequestMapping("/categories")
 public class CategoryController {
@@ -910,9 +916,7 @@ public class CategoryController {
         return category.getName();
     }
 }
-
-*********************
-Now let's try to return the product list for a category:
+******  Now let's try to return the product list for a category:        ***************
 @RestController
 @RequestMapping("/categories")
 public class CategoryController {
@@ -927,8 +931,8 @@ public class CategoryController {
         return category.getName();
     }
 }
-
 --> We may encounter the infinite recursion problem here. This is because Category has a list of products and Product has a category object. So we have a cyclic dependency here, hence we have an infinite recursion problem.
+
 --> To solve this, we can return Dtos instead of the actual entities.
 @Getter@Setter
 public class ProductDto {
@@ -1001,48 +1005,87 @@ public class CategoryController {
 * For example, we have a list of categories and we want to fetch the products for each category.
 * In the context of a database relationship between categories and products, the N+1 problem refers to a scenario where, when we fetch a list of categories, and each category has a collection of associated products, we end up making N+1 queries to the database.
 
-####   The problem: #########################################################
-
+####   The problem: ###################
 Let's see this in detail:
 Here's a more detailed explanation:
---> N represents the number of categories you're retrieving.
+--> N represents the number of categories we're retrieving.
 --> 1 represents the initial query to get the list of categories.
 --> +1 represents an additional query for each category to retrieve its associated products.
-		For example, if we have 10 categories and each category has 5 products, without addressing the N+1 problem, we would end up making 11 queries:
+For example, if we have 10 categories and each category has 5 products, without addressing the N+1 problem, we will end up making 11 queries:
 				1 query to get the list of categories.
 				10 additional queries (one for each category) to get their associated products.
 
 * This can lead to a significant number of database queries, especially if we're dealing with large datasets. It can slow down our application and put unnecessary load on the database server.
 
-####  Solution to the N+1 problem: #########################################################
+####  Solution to the N+1 problem: ####################################
+To fix the N+1 problem, we need to use techniques like EAGER LOADING or BATCH FETCHING in the ORM configuration. This allows us to retrieve related entities in a more efficient manner.
+In Spring Data JPA, for example, we can use @OneToMany or @ManyToMany annotations with fetch = FetchType.LAZY or configure Batch Fetching to control how related entities are loaded.
 
-To fix the N+1 problem is by using techniques like eager loading or batch fetching in the ORM configuration. This allows us to retrieve related entities in a more efficient manner.
-In Spring Data JPA, for example, we can use @OneToMany or @ManyToMany annotations with fetch = FetchType.LAZY or configure batch fetching to control how related entities are loaded.
-
-Implementation:
-We have a Category entity with a one-to-many relationship to Product. The fetch = FetchType.LAZY attribute tells Hibernate to load the products of a category lazily, meaning they will only be fetched from the database when accessed.
+######## Implementation: ####################################
+We have a Category entity with a One-To-Many relationship to Product.
+The fetch = FetchType.LAZY attribute tells Hibernate to load the products of a category lazily, meaning they will only be fetched from the database when accessed.
 --- Category Entity:---
    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
        private List<Product> products;
-
 Similarly, in the Product entity, the category is marked with fetch = FetchType.LAZY. This means that when we retrieve a product, the associated category will only be loaded when accessed.
 --- Product Entity:---
 	@ManyToOne(fetch = FetchType.LAZY)
 		private Category category;
-
+************************************************************************
 Using FetchType.LAZY:
-	Now, let's assume we want to retrieve all categories and their associated products. With fetch = FetchType.LAZY, the products won't be loaded immediately:
-	--- List<Category> categories = categoryRepository.findAll();
-		At this point, categories is a list of categories, but the associated products haven't been loaded from the database yet.
+Now, let's assume we want to retrieve all categories and their associated products. With fetch = FetchType.LAZY, the products won't be loaded immediately:
+--------   List<Category> categories = categoryRepository.findAll(); ---------------
 
-	Accessing Products:
-	When we access the products of a category, Hibernate will issue a separate query to the database to fetch the products:
+At this point, categories is a list of categories, but the associated products haven't been loaded from the database yet.
+Accessing Products:
+When we access the products of a category, Hibernate will issue a separate query to the database to fetch the products:
    for (Category category : categories) {
-       List<Product> products = category.getProducts(); // This triggers a query to get the products for this category
+       List<Product> products = category.getProducts();
+// This triggers a query to get the products for this category
    }
-
 This way, we avoid the N+1 problem. If we hadn't used fetch = FetchType.LAZY, Hibernate would have fetched all products eagerly, resulting in more queries.
-##############################################################################################
+#####################################################################
+Solving for the N+1 problem:
+An ideal solution to this problem would be if we could get the list of products in at max 2 db. calls:
+1.	To fetch the categories for the list of UUIDs passed.
+2.	To fetch all the products across the categories fetched for the request!
+To Fix this issue, we will go to the Category class and select Fetch Mode as SUBSELECT(Fetch Type as we know will be Lazy for all the collection type by default):
+	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@Fetch(FetchMode.SUBSELECT)
+	private List<Product> products;
+
+	Fetch Modes:
+  There are 4 fetch Modes in Spring Data JPA:
+  1.  JOIN
+  2. SELECT
+  3. SUBSELECT
+  4. DEFAULT
+
+  JOIN: Use when you always need the related data along with the main entity, and when the related data is relatively small in size.
+
+  SELECT: Use when the related data is large or not always needed, and you want to optimize performance by loading it on-demand.
+
+  SUBSELECT: Use as an optimization for collections when dealing with a large number of related entities.
+
+  DEFAULT: Let Hibernate use its default strategy based on the association type and fetch type specified in the mapping.
+ ************************************************************************************************
+So, we can see that using SUBSELECT, we can solve the N+1 problem and hence reduce the db. calls.
+FetchMode.SELECT -> Implements the ‘Select’ operation of the SQL
+FetchMode.SUBSELECT -> Implements the ‘SubQuery’ operation of the SQL
+FetchMode.JOIN -> Implements the ‘Joins’ operation of the SQL
+Out of all these, for our example, the SUBSELECT solves the N+1 problem.
+
+FetchMode.Select -> For each category, it will make a Select Query to get the products of each category: 1 + N
+
+FetchMode.Join -> For all the categories, it will make a Join Query to get the products of all the categories. For each Category, it will make a Join to the product table to get the products of that category: N + 1.
+
+FetchMode.SubSelect -> Sub-select will work at the level of List of Categories , and not at the level of categories!It will say that for a Set of Categories, run a sub-query that runs a query that gets all the products across those categories: 1 + 1.
+************************************************************************************************
+
+
+
+
+
 
 
 

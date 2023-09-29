@@ -39,11 +39,16 @@ public class CategoryController {
         return categoryDto;
     }
 
-    @GetMapping("/titles/{uuid}")
-    public List<String> getProductTitles(@PathVariable("uuid") String uuid) {
-        return categoryService.getProductTitles(uuid);
-    }
+//    @GetMapping("/titles/{uuid}")
+//    public List<String> getProductTitles(@PathVariable("uuid") String uuid) {
+//        return categoryService.getProductTitles(uuid);
+//    }
 
+    @GetMapping("/titles/")
+    public List<String> getProductTitles(@RequestBody GetProductTitlesRequestDto requestDto) {
+        List<String> uuids = requestDto.getUuids();
+        return categoryService.getProductTitles(uuids);
+    }
 
 
 }
