@@ -30,7 +30,7 @@ public class CategoryController {
             productDto.setDescription(product.getDescription());
             productDto.setTitle(product.getTitle());
             productDto.setImage(product.getImage());
-            productDto.setPrice(product.getPrice());
+            productDto.setPrice(product.getPrice().getPrice());
             productDtos.add(productDto);
         }
         CategoryDto categoryDto = new CategoryDto();

@@ -1,5 +1,6 @@
 package dev.navneet.productservice.repositories;
 
+import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,17 +12,17 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
-     // Get the product by title
+    // Get the product by title
     Product findByTitle(String title);
-     //Get a product by title and price
-     Product findByTitleAndPrice_Price(String title, Double price);
+    //Get a product by title and price
+    Product findByTitleAndPrice_Price(String title, Double price);
 
     //Get a product by id
     Optional<Product> findById(UUID id);
 
 
-     //Get all products by currency
-     List<Product> findAllByPrice_Currency(String currency);
+    //Get all products by currency
+    List<Product> findAllByPrice_Currency(String currency);
 
     //** Count the number of products in the database for a particular currency:
     Long countByPrice_Currency(String currency);
@@ -33,6 +34,20 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     // re-writing the above query using custom query interface
     @Query(value = CustomQueries.FIND_ALL_BY_TITLE, nativeQuery = true)
     List<Product> findAllByTitle(String naman);
+
+    List<Product> findByCategory(Category category);
+
+    @Query(nativeQuery = true, value = CustomQueries.GET_ALL_PRODUCT_BY_CATEGORY)
+    List<Product> getAllProductByCategory(String categoryName);
+
+    @Query(nativeQuery = true, value = CustomQueries.GET_ALL_PRODUCT_CATEGORY)
+    List<String> getAllProductCategory();
+
+    @Query(value = CustomQueries.FIND_ALL_PRODUCT, nativeQuery = true)
+    List<Product> findAllProducts();
+
+    List<Product> findAll();
+
 
     List<Product> findAllByCategoryIn(List<Category> categories);
 
