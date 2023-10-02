@@ -1,0 +1,24 @@
+Introduction to Unit Testing:
+
+-> Unit testing is a software testing method by which individual units of source code, sets of one or more computer program modules together with associated control data, usage procedures, and operating procedures, are tested to determine whether they are fit for use.
+Importance of Unit Testing:
+-> Unit testing is a software development process in which the smallest testable parts of an application, called units, are individually and independently scrutinized for proper operation. Unit testing can be done manually but is often automated.
+
+
+***************** Test- Driven Development (TDD): ************************
+-> Test- Driven Development (TDD) is a software development process that relies on the repetition of a very 	short development cycle:
+-> First the developer writes an (initially failing) automated test case that defines a desired improvement or new function,
+-> Then produces the minimum amount of code to pass that test, and
+-> Finally refactors the new code to acceptable standards. Kent Beck, who is credited with having developed or 'rediscovered' the technique, stated in 2003 that TDD encourages simple designs and inspires confidence.
+
+**** Flaky Tests **********************
+-> A flaky test is a test that is not consistently passing or failing, but rather both, for the same code. This is usually due to the test depending on some kind of external state, which is hard to control and might change unexpectedly.
+-> Flaky tests are a problem because they make it harder to trust the test suite. If a test fails, you want to be sure that it's because of a real problem in the code, not because of some flaky test. If a test is flaky, it's hard to know whether a failure is a real failure or not.
+-> Flaky tests are also a problem because they make it harder to trust the code. If a test is flaky, it's hard to know whether a failure is a real failure or not. If a test is flaky, it's hard to know whether a failure is a real failure or not.
+Flaky Tests happen because of the following reasons:
+-> The test depends on some kind of external state, which is hard to control and might change unexpectedly.
+1. Concurrency: If the test is not thread-safe, it might fail when run in parallel with other tests.
+2. Time: If the test depends on the current time, it might fail if the test runs too close to a time boundary.
+3. Randomness: If the test depends on a random number generator, it might fail if the generator produces an unexpected value.
+
+

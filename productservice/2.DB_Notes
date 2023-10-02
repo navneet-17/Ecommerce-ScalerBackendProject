@@ -1056,7 +1056,7 @@ To Fix this issue, we will go to the Category class and select Fetch Mode as SUB
 
 	Fetch Modes:
   There are 4 fetch Modes in Spring Data JPA:
-  1.  JOIN
+  1. JOIN
   2. SELECT
   3. SUBSELECT
   4. DEFAULT
@@ -1080,8 +1080,77 @@ FetchMode.Select -> For each category, it will make a Select Query to get the pr
 FetchMode.Join -> For all the categories, it will make a Join Query to get the products of all the categories. For each Category, it will make a Join to the product table to get the products of that category: N + 1.
 
 FetchMode.SubSelect -> Sub-select will work at the level of List of Categories , and not at the level of categories!It will say that for a Set of Categories, run a sub-query that runs a query that gets all the products across those categories: 1 + 1.
-************************************************************************************************
 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$ Class- 5: 25 Sep2023: Backend-13: Schema Migration, Flyway, Database Versioning $$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Schema Migration:
+If we decide to create the tables ourselves, then we will have to change the hibernate auto ddl property to none.
+		'spring.jpa.hibernate.ddl-auto=none'.
+
+Now, if we run the application, we will get an error saying that the table does not exist.
+This is giving us a RuntimeException, which is not an ideal situation to be in.
+To fix this, we will set the hibernate auto ddl property to validate.
+		'spring.jpa.hibernate.ddl-auto=validate'.
+
+Due to this, Spring Data JPA will not create the tables for us, but will validate if the tables exist or not at the time of application startup.
+If the tables do not exist, then it will throw an exception.
+
+Although, validate is a better option than none, but it is still not solving the problem for us.
+To solve this, we will use a database migration tool called Flyway through the JPA Buddy plugin.
+So , we choose the '+' icon and select the Flyway Init migration option.
+The Init migration is the start-up migration, that is the first set of table migrations that we will do.
+So, we create the tables based on the entities/models that we have created.
+We will name the migration as V1__init_db.sql.
+The JPA Buddy plugin will create a folder called db/migration under the resources folder and will create the migration file inside it.
+This is the 1st version of the database.
+If we run the application now, we will see that the tables are created in the database and we do not have any error.
+The reason that everything works is because the Flyway tool is creating the tables for us based on the migration file that we have created.
+On start-up, Spring will run all the migrations in the db/migration folder in the order of the version number.
+There will be a new table created in the database called flyway_schema_history.
+This table will contain the details of all the migrations that have been run on the database.
+Let's say we want to add a new attribute to the Product entity - inventoryCount.
+If we run the application now, we will get an error saying that the column inventory_count does not exist.
+So the Spring Data JPA is validating the tables and columns based on the entities that we have created. Database Validator is ensuring that we have everything that is needed to run the application.
+Let's say we also create a new entity called Something.
+So, we will create a new migration file for this change.
+The typical naming convention for the migration files is:
+V<version_number>__<migration_description>.sql
+So, we will name the migration file as V2__add_something_and_inventory_count.sql.
+And then we will update the products table to add the inventory_count column, as well as create the something table.
+This can become very tedious if we have to write the SQL queries for every change that we make to the database.
+So we will use the JPA Buddy plugin to generate the migration file for us.
+This time we will create a version migration file, and fill in the details of the changes that we want to make to the database.
+So, we tell the plugin that we want to have the actual state of the model as our models and the target state of the model as the database.
+The JPA Buddy plugin will generate the migration file for us and enter the same SQL queries that we had written in the migration file manually.
+
+If we run the application now, we will see that the tables are created in the database and we do not have any error.
+We can see the details of the migrations that have been run on the database in the flyway_schema_history table.
+Spring will first check if the init migration has been run or not, if it had previously run it, it won't re-run the init migration file.
+Then, it will check if the version migration has been run or not and run these scripts in the order of the version number.
+So, we can see that the Flyway tool is creating the tables for us based on the migration file that we have created.
+
+Basically, Spring checks the flyway_schema_history table to see if the migration has been run or not. If it has been run, it won't run it again.
+If we want to run the migration again, we can delete the entry from the flyway_schema_history table and then run the application again.
+Post that the validator will run and will throw an error saying that the table already exists.
+*********
+The practical use of this is when the application is ready to be deployed to production, we will run the migration files on the production database.
+We will use snapshot versions for the development database and release versions for the production database, and then we will run the migration files on the production database.
+
+If we delete both the rows from the flyway_schema_history table, and run the application again we get the below error:
+		Table 'Category' already exist.
+We get the error because the Spring Data JPA tries ti create the category table again, but the table already exists in the database.
+It tried to run the init migration file V1_init_db.sql again as it could not find any entry for it in the flyway_schema_history table, which creates the tables for the entities.
+But since we had not dropped the tables from the database, the tables already existed in the database and hence we got the error.
+
+If we drop the tables from the database and run the application again, we will see that the tables are created in the database and we do not have any error.
+We can see the details of the migrations that have been run on the database in the flyway_schema_history table. Both the init migration and the version migration have been run on the database, and timestamp info shows that the scripts were run one after the other.
+**********************************************************************************************
+All this happen via a library called Flyway.
+In every language there is a library that helps us to do the database migration.
+For Java, 2 of the most popular libraries are Flyway and Liquibase.
+Liquibase has more features than Flyway, but Flyway is more popular (90% of the use-cases).
+**********************************************************************************************
 
 
 
