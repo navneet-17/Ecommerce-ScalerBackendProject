@@ -21,4 +21,30 @@ Flaky Tests happen because of the following reasons:
 2. Time: If the test depends on the current time, it might fail if the test runs too close to a time boundary.
 3. Randomness: If the test depends on a random number generator, it might fail if the generator produces an unexpected value.
 
+*****************************************************************
+Let's say if in future the getProductById implementation changes.
+ For example, instead of returning null when the product is not found, it returns an empty generic product dto.
+ This will break the code of all the clients that are using the getProductsById.
+ To avoid this, we can write a test for the getProductsById method.
+This test will ensure that the getProductsById method returns a product when the product is found and throws an exception when the product is not found.
+***********************************************************************
 
+Implementing Unit Tests to demonstrate Flaky tests:
+---- We are writing the test under the src/test/java/dev/navneet/productservice/RandomTest.java file.
+
+@SpringBootTest
+public class RandomTest {
+    @Test
+    void testLessThan3() {
+        Random random = new Random();
+        int number = random.nextInt();
+        System.out.println(number);
+        assert(number < 10000000);
+    }
+}
+As we can see, the test is using the Random class to generate a random number and then asserting that the number is less than 10000000.
+If we run the test multiple times, we will see that the test is passing sometimes and failing sometimes.
+This is because the Random class is generating a random number every time the test is run.
+So, the test is not deterministic and is failing sometimes and passing sometimes.
+This is an example of a flaky test.
+**************************************************************
