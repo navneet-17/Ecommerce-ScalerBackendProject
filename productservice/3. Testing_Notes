@@ -1,3 +1,6 @@
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-13:25Sep Schema Migration and Introduction to Unit Testing $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Introduction to Unit Testing:
 
 -> Unit testing is a software testing method by which individual units of source code, sets of one or more computer program modules together with associated control data, usage procedures, and operating procedures, are tested to determine whether they are fit for use.
@@ -48,3 +51,29 @@ This is because the Random class is generating a random number every time the te
 So, the test is not deterministic and is failing sometimes and passing sometimes.
 This is an example of a flaky test.
 **************************************************************
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$  class-14:27Sep Unit Testing-2 																							 $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+-> In this class, we will learn about the different types of testing and how to write unit tests for them.
+-> We will also learn about the different types of assertions that we can use in our unit tests.
+
+1.	Integration Testing:
+A typical S/w system has to work with db., 3rd party APIs, cache etc.
+Integration tests how a system works wit a 3rd apart API as well
+
+Assertion Frameworks:
+-> An assertion is a statement that a condition is always true at that point in the program.
+-> Assertions are used to test the correctness of the program.
+-> In Java, we can use the assert keyword to write assertions.
+-> The assert keyword is used to test the correctness of the program.
+
+# common assert methods:
+1.	assert(condition)
+2.	assertTrue(condition, msg)
+3.	assertEquals(expected, actual, msg)
+4.	assertNull(condition)
+5.	assertThrows(exception.class, object)
+assertThrows is used to assert if the exception that we are throwing from our code is working as expected.
+
+Detailed notes of teh class is made in the word doc.
+*************************************************************************************************************
