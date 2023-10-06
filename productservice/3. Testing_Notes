@@ -77,3 +77,84 @@ assertThrows is used to assert if the exception that we are throwing from our co
 
 Detailed notes of teh class is made in the word doc.
 *************************************************************************************************************
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$  class-15:4Oct Unit Testing-3 																							 $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+We have seen the 3 types of testing:
+1.	Unit Testing
+		--> Unit tests are designed to test a single unit of code / a code in Isolation.
+2.	Integration Testing
+3.	End to End Testing / Functional Testing:
+
+If we do not get the desired result by the findProductsByTitle method, it may also mean that the bug may be coming from the inner method productRepo function or any other 3rd party dependency.
+In this case, the test for the 3rd party dependency and not the productService method is failing which is causing the testing of the product itself to fail which is not the actual case.
+To solve this problem, we can use Mocking.
+************************************************************************************
+Mocking:
+-> Mocking is a process used in unit testing when the unit being tested has external dependencies.
+-> The purpose of mocking is to isolate and focus on the code being tested and not on the behavior or state of external dependencies.
+-> Mocking is used when we want to test a class in isolation but it has dependencies on other classes.
+-> Mocking is used to create a dummy object of the class that we want to test.
+So, ideally we should mock the dependencies of the class that we want to test. In our case, we want to test the ProductService class. So, we should mock the ProductRepository class.
+************************************************************************************
+Mockito:
+-> Mockito is a mocking framework that allows us to create dummy objects of the classes that we want to test.
+############################################################################################################
+public class ProductControllerTest {
+
+    @Autowired
+    private FakeStoreProductServiceClient fakeStoreProductServiceClient;
+    @Autowired
+    private ProductController productController;
+    @MockBean
+    private ProductService productService;
+    @Test
+    public void returnsNullWhenProductDoesntExist() throws NotFoundException{
+        // Arrange// Act // Assert
+        ProductDto productDto = productController.getProductById("101");
+        when(productService.getProductById(UUID.fromString("101"))).thenReturn(null);
+        assertNull(productDto);
+    }
+
+############################################################################################################
+-> We can use the @MockBean annotation to mock the ProductRepository class.
+-> We can use the @Autowired annotation to inject the ProductService class into the ProductController class.
+-> We can use the @Autowired annotation to inject the FakeStoreProductServiceClient class into the ProductControllerTest class.
+-> We can use the when method to specify the behavior of the mocked object.
+-> We can use the thenReturn method to specify the return value of the mocked object.
+
+*************************************************************************************************************
+"this.productController" is null in the test class. Why?
+-> The reason is that the ProductController class is not a Spring bean. It is a simple Java class.
+-> So, we cannot use the @Autowired annotation to inject the ProductService class into the ProductController class.
+-> To solve this problem, we can use the @MockBean annotation to mock the ProductService class.
+-> The @MockBean annotation creates a mock for the ProductService class and adds it to the application context.
+-> So, we can use the @Autowired annotation to inject the ProductService class into the ProductController class.
+-> The @MockBean annotation is used to add mock objects to the Spring application context.
+-> The @MockBean annotation is used to mock the dependencies of the class that we want to test.
+
+***************************************************************************************************************************
+Now, We will test the APIs end to end.
+Using the SpringMVC test framework, we can test the APIs end to end.
+We can use the MockMvc class to test the APIs end to end.
+The MockMvc class is a part of the Spring MVC test framework.
+
+Whenever we use @SpringBootTest annotation, it will start the server and will run the application.
+This uses a lot of time and resources, as the Context is loaded and the server is started.
+Since we are mocking a client, we don't need the Springboot Context as the client doesn't need this.
+A client is a part of the application that makes requests to the server.
+A client will just send the API request to the server, and receive a response back based on the request.
+So, we don't need the Springboot Context for the client.
+Client just cares about the request and response.
+Here, we will write the functional tests for the APIs of the system.
+*********************************************************************************************************************
+So, instead of using the @SpringBootTest annotation, we can use the @WebMvcTest annotation.
+@WebMvcTest annotation is used to test the APIs of the application.
+@WebMvcTest annotation is used to test the controllers of the application.
+We write @WebMvcTest(ProductController.class) to test the ProductController class.
+--> This will only load the ProductController class and the required dependencies that can be reached from the Product Controller and not the entire application or any other unnecessary beans
+--> This will not load the entire application context.
+
+
+

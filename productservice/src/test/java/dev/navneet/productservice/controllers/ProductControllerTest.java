@@ -1,15 +1,25 @@
 package dev.navneet.productservice.controllers;
 
+import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.dtos.ProductDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
-import org.junit.Test;
+import dev.navneet.productservice.services.FakestoreProductService;
+import dev.navneet.productservice.services.ProductService;
+import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductServiceClient;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductServiceClient;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
 import java.util.Random;
-
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
+//import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 public class ProductControllerTest {
@@ -17,6 +27,66 @@ public class ProductControllerTest {
     @Autowired
     private FakeStoreProductServiceClient fakeStoreProductServiceClient;
 
+    @Autowired
+    private ProductController productController;
+
+    @MockBean
+    private ProductService productService;
+
+    @Autowired
+    private FakestoreProductService fakestoreProductService;
+
+//    @Test
+//    void returnsNullWhenProductDoesntExist() throws NotFoundException {
+//        when(
+//                productService.getProductById(any(Long.class))
+//        ).thenReturn(null);
+//
+//
+//        GenericProductDto genericProductDto = productController.getProductById(121L);
+////        given
+//
+//
+//        assertNull(genericProductDto);
+//    }
+
+    @Test
+    void throwsExceptionWhenProductDoesntExist() throws NotFoundException {
+        when(
+                productService.getProductById(any(UUID.class))
+        )
+                .thenReturn(null);
+
+        assertThrows(NotFoundException.class, () -> productController.getProductById(String.valueOf(123L)));
+    }
+
+    @Test
+    void returnsSameProductAsServiceWhenProductExists() throws NotFoundException {
+        ProductDto productDto = new ProductDto();
+        when(
+                productService.getProductById(any(UUID.class))
+        )
+                .thenReturn(productDto);
+
+        assertEquals(productDto.getPrice(), productController.getProductById(String.valueOf(123L)).getPrice());
+
+//        assertThrows(NotFoundException.class, () -> productController.getProductById(123L));
+    }
+
+    @Test
+    void shouldReturnTitleNamanWithProductID1() throws NotFoundException {
+        ProductDto productDto = new ProductDto();
+        productDto.setTitle("Naman");
+        when(
+                productService.getProductById(1L)
+        ).thenReturn(
+                productDto
+        );
+
+
+        ProductDto genericProductDto1 = productController.getProductById(String.valueOf(1L));
+        assertEquals("Naman", genericProductDto1.getTitle());
+    }
 
     @Test
     @DisplayName("1 + 1 equals 2")

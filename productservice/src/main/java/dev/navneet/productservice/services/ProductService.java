@@ -24,6 +24,7 @@ public interface ProductService {
     List<ProductDto> getAllProductsInCategory(String categoryName);
 
 
+    ProductDto getProductById(long l);
 }
 
 
