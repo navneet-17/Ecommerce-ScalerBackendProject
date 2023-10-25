@@ -216,6 +216,209 @@ There are 3 ways of storing a password in the databases:
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-18: 16Oct Auth-3:  User Service Implementation  $$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Every microservice in production has its own database
+•	One service should not talk to the database of another microservice.
+•	Each microservice should talk to the other microservices through an API.
+•   Each microservice should have its own database and other microservices should not have access to its database.
+
+** Reasons to use Monolithic Architecture **
+-> Monolithic applications are simple to develop.
+-> Monolithic applications are simple to test.
+-> Monolithic applications are simple to deploy.
+-> Monolithic applications are simple to scale.
+-> Monolithic applications are simple to monitor.
+-> Monolithic applications are simple to debug.
+-> Monolithic applications are simple to secure.
+
+# Microservices
+** Microservices Architecture **
+-> Microservices architecture is a style of software architecture that is structured as a collection of loosely coupled services.
+
+** Reasons to use Microservices **
+-> Each microservice is a separate application, and each can be written in a different programming language and use different data storage technologies.
+-> Microservices are loosely coupled, so if one microservice fails, the others can continue to function.
+-> Microservices are organized around business capabilities.
+-> Microservices can be deployed independently.
+-> Microservices are small, so they can be developed by small teams.
+-> Microservices are easier to understand and maintain than monolithic applications.
+-> Microservices can be scaled, tested  independently.
+-> Each microservice should have its own database and other microservices should not have access to its database.
+-> Each microservice should talk to the other microservices through an API.
+
+** Microservices Architecture disadvantages **
+-> Microservices are distributed systems, so they are more complex than monolithic applications.
+-> Microservices are distributed systems, so they are more difficult to test, debug, monitor and secure than monolithic applications.
+-> Microservices are slower than monolithic applications because they use remote procedure calls using HTTP Requests to communicate with each other.
+
+Project Structure:
+The user Service API is divided into 3 different controllers:
+1.	AuthController
+2.	RoleController
+3.	UserController
+
+1.	AuthController has 4 APIs :
+      login, logout, signup and validate.
+      DTOs:
+      Login:
+      Request  LoginRequestDto: email, password
+      Response  UserDTO: email and HashSet of roles.
+      User will have a password as well.
+
+    Logout:
+    Request  LogoutRequestDto: token, userId
+    User id is used to make each session unique as we are not  using JWT at the moment
+    Response 
+    
+    Sign-up:
+    Request  SignUpRequestDto: email, password
+    
+    Response 
+    
+    Validate:
+    Request  ValidateTokenRequestDto: token, userId
+    
+    Response 
+
+
+2. RoleController has 1 API:
+   createRole:
+   Request  createRoleRequestDto: name
+   Creates a role for the role name passed.
+   Response 
+
+3.	UserController has 2 APIs:
+      getUserDetails:
+      Request  gets the User Details for the user Id  passed.
+      Response  UserDto
+
+setUserRoles:
+Request  setUserRolesRequestDto: name
+Creates the list of rolesIds for the user passed
+Response 
+Going into the details for the Controller methods:
+1.	AuthController
+      Login:
+      	Check if the user is present, if not present, throw and error.
+      	If present, validate the entered password.
+
+2.	RoleController
+3.	UserController
+
+Creating the BCrypt Password Encoder:
+Now wherever in the project we need BCrypt Password Encoder, Spring will autowire this and inject the Bean.
+@Component is used to mark a class as a bean so that the Spring container can find it and register it as a bean.
+@Component is a generic annotation and it can be used to mark any class as a Spring bean.
+So we can create a class and mark it as @Component and it will be registered as a bean in the Spring container. And now we can inject this bean into other classes using @Autowired. This is the simplest way to create a bean in Spring.
+
+So now when we are doing sign-up, instead of storing the password in the database, we will use BCryptPasswordEncoder to encode the password and then store the encoded password in the database.
+
+Spring Security puts auth on all requests and we are getting the forbidden error.
+Encrypted password:
+
+******* BCryptPasswordEncoder Implementation: *********
+
+Create a folder Security and add Spring Security class in it. 
+@Configuration
+public class SpringSecurity {
+// TODO: implement Spring Security Filter Chain here
+
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+Now we can use this bean in the AuthService class.
+
+@Service
+public class AuthService {
+private UserRepository userRepository;
+private SessionRepository sessionRepository;
+private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.userRepository = userRepository;
+        this.sessionRepository = sessionRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+// use the BCrypt Password Encoder to encode the password before saving it in the database:
+
+    public UserDto signUp(String email, String password) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(bCryptPasswordEncoder.encode(password));
+
+        User savedUser = userRepository.save(user);
+        return UserDto.from(savedUser);
+    }
+}
+
+// Validate the login password using BCrypt Password Encoder:
+public ResponseEntity<UserDto> login(String email, String password) throws NotFoundException {
+Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("User with email "+ email+ " is not found");
+        }
+
+        // check if the password is valid using BCrypt Password Encoder
+        User user = userOptional.get();
+        if(!bCryptPasswordEncoder.matches(password, user.getPassword())){
+            throw new NotFoundException("Entered password is invalid");
+        }
+************ Generate token to be passed to the client on a successful login: ************
+// Generate token to be passed to the client on a successful login:
+// For now, we will generate a basic random string instead of a JWT token.
+// we will use RandomStringUtils from Apache Commons Lang library to generate a random string.
+
+// Add the dependency in the pom.xml file:
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.13.0</version>
+        </dependency>
+
+public ResponseEntity<UserDto> login(String email, String password) throws NotFoundException {
+Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("User with email "+ email+ " is not found");
+        }
+        User user = userOptional.get();
+        if(!bCryptPasswordEncoder.matches(password, user.getPassword())){
+            throw new NotFoundException("Entered password is invalid");
+        }
+//        if (!user.getPassword().equals(password)) {
+//            throw new NotFoundException("Entered password is invalid");
+//        }
+
+// Generate the token 
+String token = RandomStringUtils.randomAlphanumeric(30);
+Session session = new Session();
+session.setStatus(SessionStatus.ACTIVE);
+session.setToken(token);
+session.setUser(user);
+sessionRepository.save(session);
+
+        UserDto userDto = new UserDto();
+
+// Pass the token to the client as cookie in the response header
+        MultiValueMapAdapter<String, String> headers = new MultiValueMapAdapter<>(new HashMap<>());
+        headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + token);
+
+        ResponseEntity<UserDto> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
+
+        return response;
+    }
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-19: 23Oct Auth-4: JWT Implementations  $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
+
+
 
 
 
