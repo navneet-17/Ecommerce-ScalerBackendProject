@@ -147,6 +147,11 @@ public class SelfProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public ProductDto getProductById(long l) {
+        return null;
+    }
+
     private ProductDto convertProductToProductDto(Product product){
         ProductDto productDto = new ProductDto();
         productDto.setId(String.valueOf(product.getUuid()));
