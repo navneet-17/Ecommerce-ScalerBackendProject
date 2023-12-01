@@ -415,10 +415,337 @@ sessionRepository.save(session);
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-19: 23Oct Auth-4: JWT Implementations  $$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+JWT Implementation:
+JWT is a compact and self-contained way for securely transmitting information between parties as a JSON object.
+This information can be verified and trusted because it is digitally signed.
+We need to decide on which JWT library to use.
+There are many libraries available for JWT, but we will use the jjwt library.
+--> The jjwt library is a Java library that can be used to create and verify JWTs.
+--> It is a simple library with no external dependencies. It is the most popular Java library for JWT.
+     GitHub Url link: https://github.com/jwtk/jjwt#example-jws-hs
+********************************************************************************************
+The token generation that we have implemented earlier is not secure.
+If we look at our implementation, we are generating a random string and sending it to the client:
+    _String token = RandomStringUtils.randomAlphanumeric(30);
+    Session session = new Session();
+    session.setStatus(SessionStatus.ACTIVE);
+    session.setToken(token);
+    session.setUser(user);
+    sessionRepository.save(session);_
 
+The issue with this approach is that the only way for us to validate the token is to check if the token is present in the database.
+If the token is present in the database, we will consider it as a valid token.
+No client can self-validate ths token as validation will require db access and server's db access is obviously not available to the client!
 
+So, the way to solve this issue is to use JWT token; where the client can self-validate the token without the server's help. 
+As of now, if we are using a random token, we will need to have minimum of 2 db calls to validate the token:
+1.	To check if the token is present in the db and check if the token is valid.
+2. To get the user details from the db - including the authorization for various resources.
 
+With JWT, we can do both the above steps in a single step. We know that inside the JWT token, we can store any data that we want. So, we can store the user details inside the JWT token itself. So, when the client sends the token to the server, the server can validate the token and extract the user details from the token itself. So, we will not need to make a db call to get the user details.
 
+**** Implementing the JWT using jjwt library: ****
+-We will use the jjwt library to generate and validate the JWT token.
 
+GitHub Url link: https://github.com/jwtk/jjwt/blob/master/README.md
 
+-Add the dependency in the pom.xml file mentioned in the readme file of the jjwt library at the GitHub link mentioned above:
+<dependency>
+<groupId>io.jsonwebtoken</groupId>
+<artifactId>jjwt-api</artifactId>
+<version>0.12.3</version>
+</dependency>
+<dependency>
+<groupId>io.jsonwebtoken</groupId>
+<artifactId>jjwt-impl</artifactId>
+<version>0.12.3</version>
+<scope>runtime</scope>
+</dependency>
+<dependency>
+<groupId>io.jsonwebtoken</groupId>
+<artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if Gson is preferred -->
+<version>0.12.3</version>
+<scope>runtime</scope>
+</dependency>
+<!-- Uncomment this next dependency if you are using:
+     - JDK 10 or earlier, and you want to use RSASSA-PSS (PS256, PS384, PS512) signature algorithms.  
+     - JDK 10 or earlier, and you want to use EdECDH (X25519 or X448) Elliptic Curve Diffie-Hellman encryption.
+     - JDK 14 or earlier, and you want to use EdDSA (Ed25519 or Ed448) Elliptic Curve signature algorithms.    
+     It is unnecessary for these algorithms on JDK 15 or later.
+<dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcprov-jdk18on</artifactId> or bcprov-jdk15to18 on JDK 7
+    <version>1.76</version>
+    <scope>runtime</scope>
+</dependency>
+-->
+
+Post adding the dependency, we will create a class called JwtUtil.java in the Security folder.
+-- We will use the same algorithm that Scaler uses - HS256 (HMAC using SHA-256). 
+
+// Create a test key suitable for the desired HMAC-SHA algorithm:
+MacAlgorithm alg = Jwts.SIG.HS512; //or HS384 or HS256
+SecretKey key = alg.key().build();
+
+String message = "Hello World!";
+byte[] content = message.getBytes(StandardCharsets.UTF_8);
+
+// Create the compact JWS:
+String jws = Jwts.builder().content(content, "text/plain").signWith(key, alg).compact();
+
+// Parse the compact JWS:
+content = Jwts.parser().verifyWith(key).build().parseSignedContent(jws).getPayload();
+
+assert message.equals(new String(content, StandardCharsets.UTF_8));
+
+// Once the JWS is parsed, we can inspect its header and signature:
+Jws<Claims> jws = Jwts.parser().verifyWith(key).parseClaimsJws(jws);
+assert jws.getHeader().getAlgorithm().equals(alg.name());
+assert jws.getSignature().equals(jws.getSignature());
+
+// We can also parse the JWS into a JWT and inspect its body:
+Jwt<Header, Claims> jwt = Jwts.parser().verifyWith(key).parse(jws.getCompactSerialization());
+assert jwt.getBody().getSubject().equals("Joe");
+
+// We can also use the builder to construct a JWS from scratch:
+jws = Jwts.builder().header("alg", "HS256").claim("name", "Joe").signWith(key).build();
+
+// Once a user logs out, we can invalidate the token by deleting it from the database.
+// We can also set an expiry time for the token while creating it.
+ This is done by setting the expiration time in the claims while creating the token.
+
+// We can also set the claims while creating the token.
+// We can set below fields, for example in the claims while creating the token:
+// user details,  expiry time , roles,  permissions,  scopes, audience, issuer, subject, id, other custom claims.
+
+Implementation:
+We will create a class called JwtUtil.java in the Security folder.
+We will create a method called generateToken() which will take the user details and generate the token.
+** Generating the token:
+public String generateToken(User user) {
+// We will use the same algorithm that Scaler uses - HS256 (HMAC using SHA-256).
+// Create a test key suitable for the desired HMAC-SHA algorithm:
+MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS512.
+SecretKey key = alg.key().build();
+}
+
+** Complete code:*********************************************
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+public class JwtExample {
+    public static void main(String[] args) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("name", "John Doe");
+        claims.put("email", "john.doe@example.com");
+        claims.put("createdAt", new Date()); // Replace this with the actual creation date
+
+        // Set expiration date to one week from now
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.DATE, 7);
+        claims.put("expirationDate", calendar.getTime());
+
+        String secretKey = "yourSecretKey"; // Replace with your actual secret key
+
+        String jwtToken = Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(new Date())
+                .setExpiration((Date) claims.get("expirationDate"))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+
+        System.out.println("Generated JWT Token: " + jwtToken);
+    }
+}
+******************************
+
+************ Validating the JWT Token: ************
+We will create a method called validateToken() which will take the token and validate it.
+1. Extract the Token from the Request
+2. Retrieve the JWT token from the incoming request header or wherever you have it stored.
+3. Parse and Verify the Token:
+4. Use the jjwt library to parse and verify the token. Ensure that the token has not expired and that it was signed with the correct secret key.
+5. Extract the User Details from the Token:
+6. Handle Verification Failures:
+7. Implement error handling in case the token validation fails. This could include returning an error response to the client or taking appropriate action based on your application's requirements.
+
+Here's an example of how you can implement the validate method in your Auth Controller:
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+public class AuthController {
+// Replace with your actual secret key
+    private final String secretKey = "yourSecretKey"; 
+
+    @PostMapping("/validate")
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestBody String jwtToken) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Parse and verify the token
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(jwtToken)
+                    .getBody();
+
+            // Check expiration date
+            Date expirationDate = claims.getExpiration();
+            Date now = new Date();
+            if (expirationDate.before(now)) {
+                response.put("message", "Token has expired");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // Token is valid, you can access claims like claims.get("name"), claims.get("email"), etc.
+            response.put("message", "Token is valid");
+            return ResponseEntity.ok(response);
+
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException e) {
+            // Handle token validation errors
+            response.put("message", "Invalid token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+}
+*************************************************************************
+We actually make an implementation to generate the JWT token from the Security key that we have defined in the application.properties file.
+//        *******  JWT implementation ********/
+//Scaler uses HS256 algorithm, we will also use the same for our JWT implementation
+String secretKeyString = env.getProperty("custom.jwt.secretKey");
+SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
+
+                SignatureAlgorithm alg = SignatureAlgorithm.HS256;
+               SecretKey key = Keys.secretKeyFor(alg);
+
+               Map<String, Object> jsonForJwt = new HashMap<>();
+                jsonForJwt.put("email", user.getEmail());
+                jsonForJwt.put("roles", user.getRoles());
+                jsonForJwt.put("createdAt", new Date());
+                jsonForJwt.put("expiryAt", new Date(LocalDate.now().plusDays(7).toEpochDay()));
+
+                String jwtToken = Jwts.builder()
+                                            .claims(jsonForJwt)
+                                            .signWith(key, alg)
+                                            .compact();
+                System.out.println("Generated JWT Token: " + jwtToken+" for user: "+user.getEmail());
+          /*****************************************************/
+
+Next we implement the token validation in the validate method:
+//        *******  JWT token validation ********/
+
+import io.jsonwebtoken.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+public class AuthService {
+
+    // Your secret key
+    private final String secretKey = "yourSecretKey"; // Replace with your actual secret key
+
+    public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(jwtToken)
+                    .getBody();
+
+            Date expirationDate = claims.get("expiryAt", Date.class);
+            Date now = new Date();
+            if (expirationDate.before(now)) {
+                throw new JwtValidationException("Token has expired");
+            }
+
+            response.put("message", "Token is valid");
+            return ResponseEntity.ok(response);
+
+        } catch (JwtValidationException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } catch (Exception e) {
+            response.put("message", "Invalid token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+}
+import io.jsonwebtoken.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+public class AuthService {
+
+    // Your secret key
+    private final String secretKey = "yourSecretKey"; // Replace with your actual secret key
+
+    public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(jwtToken)
+                    .getBody();
+
+            Date expirationDate = claims.get("expiryAt", Date.class);
+            Date now = new Date();
+            if (expirationDate.before(now)) {
+                throw new JwtValidationException("Token has expired");
+            }
+
+            response.put("message", "Token is valid");
+            return ResponseEntity.ok(response);
+
+        } catch (JwtValidationException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } catch (Exception e) {
+            response.put("message", "Invalid token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+}
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-20: 25Oct Auth-5: JWT Decoding, Cookies, CSRF  $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-21: 27Oct Auth-6: Spring Security_OAuth2 Authorization Server  $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-22: 30Oct Auth-7: Finishing our Authentication Service  $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

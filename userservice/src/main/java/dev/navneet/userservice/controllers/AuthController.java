@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import dev.navneet.userservice.services.AuthService;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -35,10 +37,17 @@ public class AuthController {
         return authService.logout(logoutRequest.getToken(), logoutRequest.getUserId());
     }
 
+    // Updated as per our JWT IMplementation
     @PostMapping("/validate")
-    public ResponseEntity<SessionStatus> validateToken(ValidateTokenRequestDto validateTokenRequest) {
-        SessionStatus sessionStatus = authService.validate(validateTokenRequest.getToken(),
-                                                     validateTokenRequest.getUserId());
-        return new ResponseEntity<>(sessionStatus, HttpStatus.OK);
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestBody String jwtToken) {
+        return authService.validateToken(jwtToken);
     }
+
+//    @PostMapping("/validate")
+//    public ResponseEntity<SessionStatus> validateToken(ValidateTokenRequestDto validateTokenRequest) {
+//        SessionStatus sessionStatus = authService.validate(validateTokenRequest.getToken(),
+//                                                     validateTokenRequest.getUserId());
+//        return new ResponseEntity<>(sessionStatus, HttpStatus.OK);
+//
+//    }
 }
