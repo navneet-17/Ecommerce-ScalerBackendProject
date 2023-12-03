@@ -1,29 +1,37 @@
 package dev.navneet.productservice.services;
 
 import dev.navneet.productservice.dtos.GenericProductDto;
+import dev.navneet.productservice.dtos.ProductDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
 import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductDto;
 import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.FakeStoreProductServiceClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-@Primary
-@Service("fakestoreProductService")
-//public class FakestoreProductService implements ProductService{
-public class FakestoreProductService{
-// This service class will all have the method implementations to interact with the Fakestore API.
-    private  FakeStoreProductServiceClient fakeStoreProductServiceClient;
 
-    public FakestoreProductService(FakeStoreProductServiceClient fakeStoreProductServiceClient) {
+//@Primary
+@Service("fakestoreProductService")
+public class FakeStoreProductServiceImpl implements FakeStoreProductService {
+// This service class will all have the method implementations to interact with the Fakestore API.
+    private static final Logger log = LoggerFactory.getLogger(SelfProductServiceImpl.class);
+    private final FakeStoreProductServiceClient fakeStoreProductServiceClient;
+
+    public FakeStoreProductServiceImpl(FakeStoreProductServiceClient fakeStoreProductServiceClient) {
+        log.info("Creating bean FakeStoreProductServiceImpl");
         this.fakeStoreProductServiceClient = fakeStoreProductServiceClient;
     }
 
-    public GenericProductDto createProduct(GenericProductDto product) {
-        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.createProduct(product));
+    @Override
+    public GenericProductDto createProduct(ProductDto productDto) {
+        GenericProductDto genericProductDto = convertProductDtoIntoGenericProduct(productDto);
+        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.createProduct(genericProductDto));
     }
 
+    @Override
     public GenericProductDto getProductById(Long id) throws NotFoundException {
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.getProductById(id));
     }
@@ -37,15 +45,26 @@ public class FakestoreProductService{
         }
         return genericProductDtos;
     }
+    @Override
+    public GenericProductDto updateProductById(Long id, ProductDto productDto) throws NotFoundException {
+        GenericProductDto genericProductDto = convertProductDtoIntoGenericProduct(productDto);
+        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.updateProductById(id, genericProductDto));
+    }
 
+    @Override
     public GenericProductDto deleteProductById(Long id) throws NotFoundException {
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.deleteProductById(id));
     }
 
-    // TODO: Implementing the updateProductById method [H/W]
-    public GenericProductDto updateProductById(Long id, GenericProductDto genericProductDto){
-        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.updateProductById(id, genericProductDto));
-       }
+    @Override
+    public List<String> getAllProductCategories() {
+        return null;
+    }
+
+    @Override
+    public List<GenericProductDto> getAllProductsInCategory(String categoryName) {
+        return null;
+    }
 
     private GenericProductDto convertFakeStoreProductIntoGenericProduct(FakeStoreProductDto fakeStoreProductDto) {
 
@@ -59,4 +78,19 @@ public class FakestoreProductService{
 
         return product;
     }
+
+    private GenericProductDto convertProductDtoIntoGenericProduct(ProductDto productDto) {
+
+        GenericProductDto product = new GenericProductDto();
+        product.setId(String.valueOf(productDto.getId()));
+        product.setImage(productDto.getImage());
+        product.setDescription(productDto.getDescription());
+        product.setTitle(productDto.getTitle());
+        product.setPrice(productDto.getPrice());
+        product.setCategory(productDto.getCategory());
+
+        return product;
+    }
+
+    /* ***************************************************************************************************  */
 }

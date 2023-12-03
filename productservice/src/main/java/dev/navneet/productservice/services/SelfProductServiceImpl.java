@@ -9,29 +9,33 @@ import dev.navneet.productservice.models.Product;
 import dev.navneet.productservice.repositories.ProductRepository;
 import dev.navneet.productservice.repositories.PriceRepository;
 import dev.navneet.productservice.repositories.CategoryRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Primary
+//@Primary
 @Service("selfProductServiceImpl")
-public class SelfProductServiceImpl implements ProductService {
+public class SelfProductServiceImpl  implements ProductService {
+    private static final Logger log = LoggerFactory.getLogger(SelfProductServiceImpl.class);
     private final ProductRepository productRepository;
     private CategoryRepository categoryRepository;
     private PriceRepository priceRepository;
 
     public SelfProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, PriceRepository priceRepository) {
+        log.info("Creating bean SelfProductServiceImpl");
+
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.priceRepository = priceRepository;
     }
     @Override
-    public ProductDto createProduct(ProductDto productDto) {
+    public GenericProductDto createProduct(ProductDto productDto) {
         // fetch the existing category or create a new category and save it.
         Category category = categoryRepository.findByName(productDto.getCategory());
         if(category == null){
@@ -53,45 +57,45 @@ public class SelfProductServiceImpl implements ProductService {
 
         // Convert the Product to ProductDto and return it
         Product savedProduct = productRepository.save(product);
-        return convertProductToProductDto(savedProduct);
+        return convertProductToGenericProductDto(savedProduct);
     }
 
     @Override
-    public List<ProductDto> getAllProducts() {
+    public List<GenericProductDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
 //        List<ProductDto> productDtoList = new ArrayList<>();
 //        for(Product product: products){
 //            productDtoList.add(convertProductToProductDto(product));
 //        }
         // Replace using streams:
-        List<ProductDto> productDtoList = products.stream().
-                    map(this::convertProductToProductDto).
+        List<GenericProductDto> productDtoList = products.stream().
+                    map(this::convertProductToGenericProductDto).
                     collect(Collectors.toList());
 
         return productDtoList;
     }
     @Override
-    public ProductDto getProductById(UUID id) throws NotFoundException {
+    public GenericProductDto getProductById(UUID id) throws NotFoundException {
         Optional<Product> productObj = productRepository.findById(id);
         if(productObj.isEmpty()){
             throw new NotFoundException("Product with id " + id + "is not found");
         }
         Product product = productObj.get();
-        return convertProductToProductDto(product);
+        return convertProductToGenericProductDto(product);
     }
 
-    public ProductDto deleteProductById(UUID id) throws NotFoundException{
+    public GenericProductDto deleteProductById(UUID id) throws NotFoundException{
         Optional<Product> productObj = productRepository.findById(id);
         if(productObj.isEmpty()){
             throw new NotFoundException("Product with id " + id + "is not found");
         }
         Product product = productObj.get();
-        ProductDto deletedProductDto = convertProductToProductDto(product);
+        GenericProductDto deletedProductDto = convertProductToGenericProductDto(product);
         productRepository.deleteById(id);
         return deletedProductDto;
     }
 
-    public ProductDto updateProductById(UUID id, ProductDto productDto) throws NotFoundException {
+    public GenericProductDto updateProductById(UUID id, ProductDto productDto) throws NotFoundException {
         Optional<Product> productObj = productRepository.findById(id);
         if(productObj.isEmpty()){
             throw new NotFoundException("Product with id " + id + "is not found");
@@ -128,7 +132,7 @@ public class SelfProductServiceImpl implements ProductService {
         }
 
         Product updatedProduct = productRepository.save(product);
-        return convertProductToProductDto(updatedProduct);
+        return convertProductToGenericProductDto(updatedProduct);
     }
 
     @Override
@@ -140,17 +144,13 @@ public class SelfProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getAllProductsInCategory(String categoryName) {
+    public List<GenericProductDto> getAllProductsInCategory(String categoryName) {
         List<Product> productList = productRepository.getAllProductByCategory(categoryName);
         return productList.stream()
-                .map(this::convertProductToProductDto)
+                .map(this::convertProductToGenericProductDto)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public ProductDto getProductById(long l) {
-        return null;
-    }
 
     private ProductDto convertProductToProductDto(Product product){
         ProductDto productDto = new ProductDto();
@@ -163,6 +163,31 @@ public class SelfProductServiceImpl implements ProductService {
         productDto.setCurrency(product.getPrice().getCurrency());
         return productDto;
     }
+    private GenericProductDto convertProductDtoIntoGenericProduct(ProductDto productDto) {
+
+        GenericProductDto product = new GenericProductDto();
+        product.setId(String.valueOf(productDto.getId()));
+        product.setImage(productDto.getImage());
+        product.setDescription(productDto.getDescription());
+        product.setTitle(productDto.getTitle());
+        product.setPrice(productDto.getPrice());
+        product.setCategory(productDto.getCategory());
+
+        return product;
+    }
+
+    private GenericProductDto convertProductToGenericProductDto(Product product){
+        GenericProductDto genericProductDto = new GenericProductDto();
+        genericProductDto.setId(String.valueOf(product.getUuid()));
+        genericProductDto.setTitle(product.getTitle());
+        genericProductDto.setDescription(product.getDescription());
+        genericProductDto.setImage(product.getImage());
+        genericProductDto.setCategory(product.getCategory().getName());
+        genericProductDto.setPrice(product.getPrice().getPrice());
+//        productDto.setCurrency(product.getPrice().getCurrency());
+        return genericProductDto;
+    }
+
 }
 
 
