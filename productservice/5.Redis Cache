@@ -1,0 +1,106 @@
+Steps to implement Redis Cache:
+Step-1: Install Redis Cache in the local machine.
+        In windows, open a WSH terminal and run the following commands:
+				--> sudo apt-add-repository ppa:redislabs/redis
+				--> sudo apt-get update
+				--> sudo apt-get upgrade
+				--> sudo apt-get install redis-server
+				Once the installation is complete, run the following command to check if the Redis server is running:
+				--> sudo service redis-server status
+				You should see the following message:
+				redis-server is running
+				--> redis-cli ping
+				If the server is running, it will reply with PONG.
+Step-2: Start the Redis Cache server.
+				--> redis-server
+				Redis re-usable commands:
+        --> sudo service redis-server start
+        --> sudo service redis-server stop
+        --> sudo service redis-server restart
+			  --> sudo service redis-server status
+Step-3: Add the Redis Cache dependency in the pom.xml file.
+				<dependency>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-starter-data-redis</artifactId>
+						<version>2.7.2</version>
+				</dependency>
+Step-4: Add the Redis Cache configuration in a config file.
+				@Configuration
+        public class RedisConfig {
+
+            @Bean
+            public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+                RedisTemplate<String, Object> template = new RedisTemplate<>();
+                template.setConnectionFactory(redisConnectionFactory);
+                return template;
+            }
+        }
+Step-5(Optional): Add the Redis Cache configuration in the application.properties file (If using Redis on a different machine).
+		    spring.redis.host=localhost
+				spring.redis.port=6379
+				spring.redis.password=
+				spring.redis.database=0
+
+Step-6: Re-run the Springboot application and check if there are no errors due to the Redis Cache configuration.
+
+Step-7: Add the implements Serializable interface to the model class which needs to be stored in Redis.
+				(For our example, we need to add the implements Serializable interface to the GenericProductDto class)
+			public class GenericProductDto implements Serializable {
+				   // Changing the value to String to return the string value of UUIDs / Long
+            private String id; // This is the id of the product in the database.
+            private String title;
+            private String description;
+            private String image;
+            private String category;
+            private double price;
+			}
+
+Step-8: Implementing the redis logic in the service Impl class:
+				1) Injecting the RedisTemplate bean in the service class:
+
+				@Service("fakestoreProductService")
+				public class FakeStoreProductServiceImpl implements FakeStoreProductService {
+				// This service class will all have the method implementations to interact with the Fakestore API.
+						private static final Logger log = LoggerFactory.getLogger(SelfProductServiceImpl.class);
+						private final FakeStoreProductServiceClient fakeStoreProductServiceClient;
+						private RedisTemplate<String, Object> redisTemplate;
+
+						public FakeStoreProductServiceImpl(FakeStoreProductServiceClient fakeStoreProductServiceClient,
+																							 RedisTemplate<String, Object> redisTemplate) {
+								log.info("Creating bean FakeStoreProductServiceImpl");
+								this.fakeStoreProductServiceClient = fakeStoreProductServiceClient;
+								this.redisTemplate = redisTemplate;
+						}
+				...
+				}
+
+				2) Adding the redis logic in the service method:
+
+				@Override
+        public GenericProductDto getProductById(Long id) throws NotFoundException {
+                GenericProductDto genericProductDto = (GenericProductDto) redisTemplate
+                                                    .opsForHash().get("products", id);
+                /*If the product with the given id already exists in the Redis cache,
+                 then return the product from the cache.*/
+                if (genericProductDto != null)
+                    return genericProductDto;
+                /* Else,make an API call to fetch the product from the Fakestore API,
+                * store it in the Redis cache and return the product. */
+                GenericProductDto newGenericProductDto = convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.getProductById(id));
+                    redisTemplate.opsForHash().put("products", id, newGenericProductDto);
+                    return newGenericProductDto;
+        }
+
+Step-9: Re-run the Springboot application and check if the product is being fetched from the Redis cache using 		       Postman.
+				1st call -> ~ 1015ms
+				2nd call -> ~ 15ms
+				3rd call -> ~ 13ms
+				4th call -> ~ 8ms
+
+Note: The time taken to fetch the product from the Redis cache will be less than the time taken to fetch the product from the Fakestore API.
+
+This is the complete implementation of Redis Cache in a Springboot application.
+******************************************************************************************************************
+
+
+

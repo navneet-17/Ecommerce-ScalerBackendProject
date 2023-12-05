@@ -34,8 +34,6 @@ public class ProductServiceConfig {
             return fakeStoreProductServiceImpl;
         }
     }
-
-
 ### Step-3:  Controller Code: ###
 
 
