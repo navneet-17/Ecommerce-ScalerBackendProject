@@ -9,6 +9,7 @@ import dev.navneet.userservice.repositories.SessionRepository;
 import dev.navneet.userservice.repositories.UserRepository;
 import dev.navneet.userservice.models.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -26,12 +27,11 @@ import org.springframework.util.MultiValueMapAdapter;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -56,113 +56,132 @@ public class AuthService {
         }
         User user = userOptional.get();
         if(!bCryptPasswordEncoder.matches(password, user.getPassword())){
-            throw new NotFoundException("Entered password is invalid");
+            throw new NotFoundException("Entered password is incorrect");
+        }
+        else{
+            System.out.println("Password Validation is successful");
         }
         String token = RandomStringUtils.randomAlphanumeric(30);
 
         //        *******  JWT implementation ********/
                 //Scaler uses HS256 algorithm, we will also use the same for our JWT implementation
-                String secretKeyString = env.getProperty("custom.jwt.secretKey");
-                SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
+                // Get the secret key from the properties file
+             String secretKeyString = env.getProperty("custom.jwt.secretKey");
+            if (secretKeyString == null || secretKeyString.length() < 32) {
+                throw new IllegalArgumentException("The JWT secret key must be at least 32 characters long.");
+            }
+            SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
 
                 SignatureAlgorithm alg = SignatureAlgorithm.HS256;
-               SecretKey key = Keys.secretKeyFor(alg);
+
+
+                Instant now = Instant.now();
+                Instant expiry = now.plus(7, ChronoUnit.DAYS);
 
                Map<String, Object> jsonForJwt = new HashMap<>();
                 jsonForJwt.put("email", user.getEmail());
                 jsonForJwt.put("roles", user.getRoles());
-                jsonForJwt.put("createdAt", new Date());
-                jsonForJwt.put("expiryAt", new Date(LocalDate.now().plusDays(7).toEpochDay()));
+                jsonForJwt.put("createdAt", now.getEpochSecond());
+                jsonForJwt.put("expiryAt", expiry.getEpochSecond());
 
                 String jwtToken = Jwts.builder()
                                             .claims(jsonForJwt)
-                                            .signWith(key, alg)
+                                            .signWith(secretKey, alg)
                                             .compact();
                 System.out.println("Generated JWT Token: " + jwtToken+" for user: "+user.getEmail());
           /*****************************************************/
-
+        // Session creation
         Session session = new Session();
         session.setStatus(SessionStatus.ACTIVE);
-        session.setToken(token);
+        session.setToken(jwtToken); // Use the generated JWT token
         session.setUser(user);
+        session.setCreatedAt(Date.from(now)); // Set the Date field for creation
+        session.setExpiringAt(Date.from(expiry)); // Set the Date field for expiry
+        session.setLastLoggedInAt(new Date());
         sessionRepository.save(session);
 
-        UserDto userDto = new UserDto();
+         UserDto userDto = new UserDto();
 
         MultiValueMapAdapter<String, String> headers = new MultiValueMapAdapter<>(new HashMap<>());
-        headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + token);
+        headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + jwtToken);
 
         ResponseEntity<UserDto> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
 
         return response;
     }
 
-    public ResponseEntity<Void> logout(String token, Long userId) {
+    public ResponseEntity<String> logout(String token, Long userId) {
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
 
         if (sessionOptional.isEmpty()) {
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active session was found for user"+ userId);
         }
+
         Session session = sessionOptional.get();
         session.setStatus(SessionStatus.LOGGED_OUT);
+        session.setLoggedOutAt(new Date());
         sessionRepository.save(session);
-        return ResponseEntity.ok().build();
+        System.out.println("User with user id"+ userId +" has been successfully logged out");
+        return ResponseEntity.ok("You have been successfully logged out");
     }
 
     public UserDto signUp(String email, String password) {
         User user = new User();
         user.setEmail(email);
         user.setPassword(bCryptPasswordEncoder.encode(password));
-
         User savedUser = userRepository.save(user);
         return UserDto.from(savedUser);
     }
 
-    // Your secret key
-    private final String secretKey = "yourSecretKey"; // Replace with your actual secret key
-
-    public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
+       public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
         return null;
     }
-//        Map<String, Object> response = new HashMap<>();
-//
-//        try {
-//            Claims claims = Jwts.parser()
-//                    .setSigningKey(secretKey)
-//                    .parseClaimsJws(jwtToken)
-//                    .getBody();
-//
-//            Date expirationDate = claims.get("expiryAt", Date.class);
-//            Date now = new Date();
-//            if (expirationDate.before(now)) {
-//                throw new JwtValidationException("Token has expired");
-//            }
-//
-//            response.put("message", "Token is valid");
-//            return ResponseEntity.ok(response);
-//
-//        } catch (JwtValidationException e) {
-//            response.put("message", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        } catch (Exception e) {
-//            response.put("message", "Invalid token");
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        }
-//    }
 
     public SessionStatus validate(String token, Long userId) {
+        // get the secret key for the token validation
+        String secretKeyString = env.getProperty("custom.jwt.secretKey");
+        SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
+
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
 
         if (sessionOptional.isEmpty()) {
             return SessionStatus.EXPIRED;
         }
-
         Session session = sessionOptional.get();
+
         if (session.getStatus() != SessionStatus.ACTIVE) {
             return SessionStatus.EXPIRED;
         }
 
-        Jwts.parser().build();
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            // Email Check
+            String tokenEmail = claims.get("email", String.class);
+            if (tokenEmail == null || !tokenEmail.equals(session.getUser().getEmail())) {
+                return SessionStatus.EXPIRED;
+            }
+
+            // Token Expiration Check
+            Long expiryAt = claims.get("expiryAt", Long.class);
+            if (expiryAt == null || expiryAt < System.currentTimeMillis() / 1000) {
+                return SessionStatus.EXPIRED;
+            }
+            // Roles Check (optional, if necessary)
+            // List<String> tokenRoles = claims.get("roles", List.class);
+            // if (tokenRoles == null || !tokenRoles.equals(session.getUser().getRoles())) {
+            //        return SessionStatus.EXPIRED;
+            // }
+
+        } catch (Exception e) {
+            // If token parsing or validation fails, consider the session as expired
+            return SessionStatus.EXPIRED;
+        }
+
         return SessionStatus.ACTIVE;
     }
 }

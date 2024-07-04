@@ -10,29 +10,29 @@ Authentication v/s Authorization:
   2FA is an extra layer of security used to make sure that people trying to gain access to an online account are who they say they are. First, a user will enter their username and a password. Then, instead of immediately gaining access, they will be required to provide another piece of information.
 
 *2 types of authentication:
-1. Basic Authentication
+1. Basic Authentication:
    Basic authentication is a simple authentication scheme built into the HTTP protocol.
 2. Token Based Authentication
-   Token-based authentication is a process where the user sends his credential to the server, server will validate the user details and generate a token which is sent as response to the users, and user store the token in client side and send this token on every request to the server to access protected resources.
+   Token-based authentication is a process where the user sends his credential to the server, server will validate the user details and generate a token which is sent as response to the users, and the user stores the token in client side and sends this token on every request to the server to access protected resources.
 
 OAuth:
 OAuth is an open standard for access delegation, commonly used as a way for Internet users to grant websites or applications access to their information on other websites but without giving them the passwords.
 
-* oAuth is mainly used for authorization purpose.
+* oAuth is mainly used for authorization.
   --> Checking if the user is authorized to access the resource or not.
   --> It is a protocol that allows a user to grant limited access to their resources on one site, to another site, without having to expose their credentials.
 
 * OAuth is an authorization protocol that contains an authentication step.
-* OAuth is a protocol that utilizes tokens in order to access resources on behalf of a resource owner.
+* OAuth is a protocol that uses tokens to access resources on behalf of a resource owner.
 * OAuth can be used in conjunction with XACML where XACML is used for authorization and OAuth is used for authentication.
 
-  Login with facebook, google, twitter, github, linkedin, etc. are all based on OAuth protocol.
-  --> You can use your google account to login to any other website.
+  Login with Facebook, Google, Twitter, GitHub, LinkedIn, etc. are all based on OAuth protocol.
+  --> You can use your Google account to log in to any other website.
   --> Permissions are asked before giving access to the user's data.
   --> You can revoke the access anytime you want.
 
 * Components of oAuth Protocol.
-  There are 4 main components of OAuth protocol.
+  There are four main parts of OAuth protocol.
     1. Resource Owner
     2. Resource Server
     3. Client
@@ -49,10 +49,15 @@ OAuth is an open standard for access delegation, commonly used as a way for Inte
   		 	The resource server can accept the access token from the client and validate it and provide the resources if the access token is valid.
 
     3. Client
-       --> Client is the application which wants to access the resources on behalf of the resource owner. The client first needs to obtain the permission from the resource owner and then request the authorization server to provide an access token. The client then uses this access token to access the protected resources hosted by the resource server.
+       --> Client is the application that wants to access the resources on behalf of the resource owner.
+       The client first needs to get the permission from the resource owner
+       and then request the authorization server to provide an access token.
+       The client then uses this access token to access the protected resources hosted by the resource server.
 
     4. Authorization Server
-       --> Authorization Server is the server which issues the tokens to the client after successfully authenticating the resource owner and getting authorization.
+       --> Authorization Server is the server
+       that issues the tokens to the client
+       after successfully authenticating the resource owner and getting authorization.
        The authorization server also provides an interface for the resource server to validate the access token.
 
   ##########################################################
@@ -102,7 +107,7 @@ OAuth is an open standard for access delegation, commonly used as a way for Inte
       base64UrlEncode(payload),
       secret)
 
-        * The secret is a string which is known only to the server and client, and it will be used to encode and decode JWT token.
+        * The secret is a string that is known only to the server and client, and it will be used to encode and decode JWT token.
 
 * We have data in the payload that we are trying to encrypt with the cryptographic algorithm mentioned in the header.
 
@@ -179,11 +184,11 @@ There are 3 ways of storing a password in the databases:
    	He searches for the entire db. for same encrypted value, and one finding one, he can know the real password.
    	He can also figure out the encoding technique by comparing real and encrypted passwords for the users.
 
-    * A hacker can create 30 different accounts,  use the common passwords, and see their encrypted value in the database. Then he can search for the same encrypted values and figure out users who have the common passwords.
-    * Chances are these users will also have the same password in the popular websites and he can get access to their accounts.
+    * A hacker can create 30 different accounts, use the common passwords, and see their encrypted value in the database. Then he can search for the same encrypted values and figure out users who have the common passwords.
+    * Chances are these users will also have the same password on the popular websites and they can get access to their accounts.
 
-3. Use Salting and then Encrypt the password and store in   the database.
-    In this technique, instead of just encrypting the password, we can use an  additional random data and then store this unique value as password.
+3. Use Salting and then Encrypt the password and store in the database.
+    In this technique, instead of just encrypting the password, we can use an additional random data and then store this unique value as password.
     Example: 2 people having the same password will have different values in the db. if their current timestamp is considered.
     This will fix the password leakage issue, and no one will be able to figure out the exact password as the salting contains random data.
     However, this leads to a new issue:
@@ -741,6 +746,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-20: 25Oct Auth-5: JWT Decoding, Cookies, CSRF  $$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+
+
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-21: 27Oct Auth-6: Spring Security_OAuth2 Authorization Server  $$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -749,3 +756,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-22: 30Oct Auth-7: Finishing our Authentication Service  $$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$ class-35: 21Jan: Spring Cloud  $$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+So far 

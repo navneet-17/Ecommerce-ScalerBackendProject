@@ -12,10 +12,15 @@ import java.util.Date;
 @Getter@Setter
 @Entity(name="sessions")
 public class Session extends BaseModel{
-    private String token;
-    private Date expiringAt;
-    @ManyToOne
-    private User user;
-  @Enumerated(EnumType.ORDINAL)
-   private SessionStatus status;
+        private String token;
+        private Date createdAt;
+        private Date expiringAt;
+        private Date lastLoggedInAt;
+        private Date loggedOutAt;
+
+        @ManyToOne
+        private User user;
+
+      @Enumerated(EnumType.STRING)
+       private SessionStatus status;
 }
