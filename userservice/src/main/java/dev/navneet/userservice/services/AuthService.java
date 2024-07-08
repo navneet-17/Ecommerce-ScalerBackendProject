@@ -1,8 +1,10 @@
 package dev.navneet.userservice.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.navneet.userservice.dtos.UserDto;
-import dev.navneet.userservice.exceptions.JwtValidationException;
 import dev.navneet.userservice.exceptions.NotFoundException;
+import dev.navneet.userservice.models.Role;
 import dev.navneet.userservice.models.Session;
 import dev.navneet.userservice.models.SessionStatus;
 import dev.navneet.userservice.repositories.SessionRepository;
@@ -13,23 +15,18 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.MacAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.server.authentication.AnonymousAuthenticationWebFilter;
 import org.springframework.stereotype.Service;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.util.MultiValueMapAdapter;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLOutput;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -38,9 +35,9 @@ public class AuthService {
     @Autowired
     private Environment env;
 
-    private UserRepository userRepository;
-    private SessionRepository sessionRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final UserRepository userRepository;
+    private final SessionRepository sessionRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
@@ -58,10 +55,19 @@ public class AuthService {
         if(!bCryptPasswordEncoder.matches(password, user.getPassword())){
             throw new NotFoundException("Entered password is incorrect");
         }
-        else{
-            System.out.println("Password Validation is successful");
+
+        // Check if there is already an active session for the user
+        Optional<Session> activeSession = sessionRepository.findByUserIdAndStatus(user.getId(), SessionStatus.ACTIVE);
+        if (activeSession.isPresent()) {
+            UserDto userDto = new UserDto();
+            userDto.setMessage("User is already logged in. Please log out before re-logging in.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(userDto);
         }
-        String token = RandomStringUtils.randomAlphanumeric(30);
+
+            System.out.println("Password Validation is successful");
+            System.out.println("Creating  JWT token for the user");
+
+//        String token = RandomStringUtils.randomAlphanumeric(30);
 
         //        *******  JWT implementation ********/
                 //Scaler uses HS256 algorithm, we will also use the same for our JWT implementation
@@ -89,7 +95,7 @@ public class AuthService {
                                             .signWith(secretKey, alg)
                                             .compact();
                 System.out.println("Generated JWT Token: " + jwtToken+" for user: "+user.getEmail());
-          /*****************************************************/
+
         // Session creation
         Session session = new Session();
         session.setStatus(SessionStatus.ACTIVE);
@@ -101,6 +107,8 @@ public class AuthService {
         sessionRepository.save(session);
 
          UserDto userDto = new UserDto();
+         userDto.setEmail(email);
+         userDto.setMessage("Login was successful");
 
         MultiValueMapAdapter<String, String> headers = new MultiValueMapAdapter<>(new HashMap<>());
         headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + jwtToken);
@@ -111,26 +119,38 @@ public class AuthService {
     }
 
     public ResponseEntity<String> logout(String token, Long userId) {
-        Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
+            Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
 
-        if (sessionOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active session was found for user"+ userId);
-        }
+            if (sessionOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active session was found for user " + userId);
+            }
 
-        Session session = sessionOptional.get();
-        session.setStatus(SessionStatus.LOGGED_OUT);
-        session.setLoggedOutAt(new Date());
-        sessionRepository.save(session);
-        System.out.println("User with user id"+ userId +" has been successfully logged out");
-        return ResponseEntity.ok("You have been successfully logged out");
+            Session session = sessionOptional.get();
+            session.setStatus(SessionStatus.LOGGED_OUT);
+            session.setLoggedOutAt(new Date());
+            sessionRepository.save(session);
+            System.out.println("User with user id " + userId + " has been successfully logged out");
+            return ResponseEntity.ok("You have been successfully logged out");
+
     }
 
     public UserDto signUp(String email, String password) {
+
+        // Check if the user is already registered
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            UserDto userDto = new UserDto();
+            userDto.setMessage("User with email " + email + " is already registered. Please log in.");
+            return userDto;
+        }
+        // If the user is not registered, proceed with registration
         User user = new User();
         user.setEmail(email);
         user.setPassword(bCryptPasswordEncoder.encode(password));
         User savedUser = userRepository.save(user);
-        return UserDto.from(savedUser);
+        UserDto userDto = UserDto.from(savedUser);
+        userDto.setMessage("You have been registered successfully. Use your email and password for login.");
+        return userDto;
     }
 
        public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
@@ -153,35 +173,58 @@ public class AuthService {
             return SessionStatus.EXPIRED;
         }
 
+        //Validating the Token data
         try {
-            Claims claims = Jwts.parser()
+            @SuppressWarnings("deprecation")
+            Jws<Claims> jwsClaims = Jwts.parser()
                     .setSigningKey(secretKey)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseClaimsJws(token);
+
+            @SuppressWarnings("deprecation")
+            Claims claims = jwsClaims.getBody();
 
             // Email Check
             String tokenEmail = claims.get("email", String.class);
             if (tokenEmail == null || !tokenEmail.equals(session.getUser().getEmail())) {
+                System.out.println("Token email mismatch");
                 return SessionStatus.EXPIRED;
             }
 
             // Token Expiration Check
-            Long expiryAt = claims.get("expiryAt", Long.class);
-            if (expiryAt == null || expiryAt < System.currentTimeMillis() / 1000) {
+            Date tokenExpiryAt = claims.get("expiryAt", Date.class);
+            if (tokenExpiryAt == null || tokenExpiryAt.before(new Date())) {
+                System.out.println("Token has already expired at " + tokenExpiryAt);
                 return SessionStatus.EXPIRED;
             }
-            // Roles Check (optional, if necessary)
-            // List<String> tokenRoles = claims.get("roles", List.class);
-            // if (tokenRoles == null || !tokenRoles.equals(session.getUser().getRoles())) {
-            //        return SessionStatus.EXPIRED;
-            // }
+
+            // Roles Check
+            Object rolesObj = claims.get("roles");
+            List<Role> userRoles;
+            if (rolesObj instanceof List<?>) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                userRoles = objectMapper.convertValue(rolesObj, new TypeReference<List<Role>>() {});
+            } else {
+                System.out.println("Roles claim is not of type List<Role>");
+                return SessionStatus.EXPIRED;
+            }
+
+            //convert the extracted <List> user roles and compare with the Set<roles> present in the db for user:
+            Set<Role> tokenRolesSet = new HashSet<>(userRoles);
+            Set<Role> sessionRolesSet = session.getUser().getRoles();
+
+            if (!tokenRolesSet.equals(sessionRolesSet)){
+                System.out.println("Token roles mismatch");
+                return SessionStatus.EXPIRED;
+            }
 
         } catch (Exception e) {
             // If token parsing or validation fails, consider the session as expired
+            // TODO --> replace this Call to 'printStackTrace()' with  more robust logging using  'SLF4J and Logback' dependencies
+            // TODO -->  and Configuring Logger: Create a logback.xml
+            e.printStackTrace();
             return SessionStatus.EXPIRED;
         }
-
         return SessionStatus.ACTIVE;
     }
 }

@@ -12,12 +12,12 @@ import java.util.Set;
 public class UserDto {
     private String email;
     private Set<Role> roles = new HashSet<>();
+    private String message;
 
     public static UserDto from(User user) {
         UserDto userDto = new UserDto();
         userDto.setEmail(user.getEmail());
         userDto.setRoles(user.getRoles());
-
         return userDto;
     }
 }

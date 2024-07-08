@@ -744,7 +744,34 @@ public class AuthService {
 }
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-20: 25Oct Auth-5: JWT Decoding, Cookies, CSRF  $$$
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+JWT Token Validation
+Current Implementation: Validates session status using the token data.
+Enhancement: Extract data from the token using parseSignedClaims(). Store data in a JWS<Claims> object and fetch data using getPayload(). Typecast the object for each field (e.g., email, roles). Handle exceptions for unchecked casts.
+
+Robust Validation: Enhance token validation by fetching fields and handling exceptions appropriately.
+Handling Tokens in Microservices
+Authentication Integration: Product service controllers include a 'token' variable (JWT token) in requests, either from request headers or body.
+Verification: Use network tab to check request headers or cookies. Authentication data might also be within cookies as the auth session ID.
+API Gateway: In production, authentication validation is handled at the API Gateway layer. The gateway appends the JWT token to the request body after validation.
+API Gateway Implementation
+Architecture: API Gateway handles initial authentication. Passes requests with valid tokens to respective services (user, product, payment).
+
+Token Validation: The gateway validates tokens by sending them to the user service. If valid, appends the JWT body to the request.
+Request Modification: API Gateway, acting as a proxy server, modifies requests by adding JWT data.
+Efficiency: Reduces repeated code and inter-service communication by centralizing token validation.
+Cookies and CSRF
+Cookies: A value sent by the server to the client, automatically attached to every request to the same server domain by the browser.
+Example: When visiting scaler.com, the server sends an auth session ID cookie. The browser stores it and attaches it to all future requests to scaler.com.
+Cross-Domain Requests: Cookies are domain-specific. Requests to other domains do not include cookies from the original domain.
+CSRF Protection: SameSite attribute in cookies ensures they are only sent with requests from the same domain, protecting against CSRF attacks.
+Real-World Example: Facebook Like Button
+Tracking: Facebook's like button on various sites allowed it to track user activity across the internet by sending cookies with requests.
+Third-Party Cookies: Cookies set by one domain used by another domain can track user activity, posing privacy concerns. Modern browsers allow disabling third-party cookies to prevent this.
+CSRF (Cross-Site Request Forgery)
+Vulnerability: Authenticated sessions can be exploited by malicious sites to perform actions on behalf of the user without their knowledge.
+Protection: SameSite attribute in cookies prevents them from being sent in cross-site requests, mitigating CSRF risks.
+This summary captures the key points and concepts discussed in the notes regarding JWT decoding, handling tokens in microservices, cookies, and CSRF protection.
 
 
 
