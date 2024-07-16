@@ -773,11 +773,11 @@ Vulnerability: Authenticated sessions can be exploited by malicious sites to per
 Protection: SameSite attribute in cookies prevents them from being sent in cross-site requests, mitigating CSRF risks.
 This summary captures the key points and concepts discussed in the notes regarding JWT decoding, handling tokens in microservices, cookies, and CSRF protection.
 
-
-
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-21: 27Oct Auth-6: Spring Security_OAuth2 Authorization Server  $$$
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $$$ class-22: 30Oct Auth-7: Finishing our Authentication Service  $$$
