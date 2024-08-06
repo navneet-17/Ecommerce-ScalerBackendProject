@@ -29,7 +29,7 @@ public class CustomSpringUserDetailService implements UserDetailsService {
         }
 
         User user = userOptional.get();
-        return new CustomSpringUserDetail(user);
+        return new CustomSpringUserDetails(user);
 
     }
 }
