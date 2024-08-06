@@ -20,13 +20,15 @@ public class FakeStoreProductServiceImpl implements FakeStoreProductService {
 // This service class will all have the method implementations to interact with the Fakestore API.
     private static final Logger log = LoggerFactory.getLogger(SelfProductServiceImpl.class);
     private final FakeStoreProductServiceClient fakeStoreProductServiceClient;
-    private RedisTemplate<String, Object> redisTemplate;
+//    private RedisTemplate<String, Object> redisTemplate;
 
-    public FakeStoreProductServiceImpl(FakeStoreProductServiceClient fakeStoreProductServiceClient,
-                                       RedisTemplate<String, Object> redisTemplate) {
+    public FakeStoreProductServiceImpl(FakeStoreProductServiceClient fakeStoreProductServiceClient) {
+//    public FakeStoreProductServiceImpl(FakeStoreProductServiceClient fakeStoreProductServiceClient,
+//                                       RedisTemplate<String, Object> redisTemplate) {
+
         log.info("Creating bean FakeStoreProductServiceImpl");
         this.fakeStoreProductServiceClient = fakeStoreProductServiceClient;
-        this.redisTemplate = redisTemplate;
+//        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -35,20 +37,25 @@ public class FakeStoreProductServiceImpl implements FakeStoreProductService {
         return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.createProduct(genericProductDto));
     }
 
+
     @Override
     public GenericProductDto getProductById(Long id) throws NotFoundException {
-        GenericProductDto genericProductDto = (GenericProductDto) redisTemplate
-                                            .opsForHash().get("products", id);
-        /*If the product with the given id already exists in the Redis cache,
-         then return the product from the cache.*/
-        if (genericProductDto != null)
-            return genericProductDto;
-        /* Else,make an API call to fetch the product from the Fakestore API,
-        * store it in the Redis cache and return the product. */
-        GenericProductDto newGenericProductDto = convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.getProductById(id));
-            redisTemplate.opsForHash().put("products", id, newGenericProductDto);
-            return newGenericProductDto;
-        }
+        return convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.getProductById(id));
+    }
+//    @Override
+//    public GenericProductDto getProductById(Long id) throws NotFoundException {
+//        GenericProductDto genericProductDto = (GenericProductDto) redisTemplate
+//                .opsForHash().get("products", id);
+//        /*If the product with the given id already exists in the Redis cache,
+//         then return the product from the cache.*/
+//        if (genericProductDto != null)
+//            return genericProductDto;
+//        /* Else,make an API call to fetch the product from the Fakestore API,
+//         * store it in the Redis cache and return the product. */
+//        GenericProductDto newGenericProductDto = convertFakeStoreProductIntoGenericProduct(fakeStoreProductServiceClient.getProductById(id));
+//        redisTemplate.opsForHash().put("products", id, newGenericProductDto);
+//        return newGenericProductDto;
+//    }
 
     public List<GenericProductDto> getAllProducts() {
         List<GenericProductDto> genericProductDtos = new ArrayList<>();
