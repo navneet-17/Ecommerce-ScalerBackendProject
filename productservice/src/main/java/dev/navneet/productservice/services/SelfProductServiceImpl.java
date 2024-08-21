@@ -21,11 +21,11 @@ import java.util.stream.Collectors;
 
 //@Primary
 @Service("selfProductServiceImpl")
-public class SelfProductServiceImpl  implements ProductService {
+public class SelfProductServiceImpl  implements ProductService<UUID> {
     private static final Logger log = LoggerFactory.getLogger(SelfProductServiceImpl.class);
     private final ProductRepository productRepository;
-    private CategoryRepository categoryRepository;
-    private PriceRepository priceRepository;
+    private final CategoryRepository categoryRepository;
+    private final PriceRepository priceRepository;
 
     public SelfProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, PriceRepository priceRepository) {
         log.info("Creating bean SelfProductServiceImpl");

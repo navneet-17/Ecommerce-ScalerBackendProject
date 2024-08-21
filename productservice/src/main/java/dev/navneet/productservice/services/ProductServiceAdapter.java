@@ -2,6 +2,8 @@ package dev.navneet.productservice.services;
 
 import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.dtos.ProductDto;
+import dev.navneet.productservice.exceptions.NotFoundException;
+import lombok.Getter;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,84 +11,83 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
 
+@Getter
 @Component
 public class ProductServiceAdapter {
-    private final ProductService productService;
-    private final FakeStoreProductService fakeStoreProductService;
-    private final String serviceToBeUsed;
+    private final ProductService<?> productService;
 
     @Autowired
-    public ProductServiceAdapter(ProductService productService,
-                                 FakeStoreProductService fakeStoreProductService,
+    public ProductServiceAdapter(
+                                FakeStoreProductServiceImpl fakeStoreProductService,
+                                 SelfProductServiceImpl selfProductService,
                                  Environment environment) {
-        this.productService = productService;
-        this.fakeStoreProductService = fakeStoreProductService;
-        this.serviceToBeUsed = environment.getProperty("service.type");
+        String serviceToBeUsed = environment.getProperty("service.type");
         System.out.println("Service to be used: " + serviceToBeUsed);
-    }
 
-
-    public GenericProductDto getProductById(String id) {
-        if ("fakestore".equals(serviceToBeUsed)) {
-            Long longId = Long.parseLong(id);
-            return fakeStoreProductService.getProductById(longId);
+        if ("self".equals(serviceToBeUsed)) {
+            // Use SelfService implementation
+            this.productService = selfProductService;
+        } else if ("fakestore".equals(serviceToBeUsed)) {
+            // Use FakeStore implementation
+            this.productService = fakeStoreProductService;
         } else {
-            UUID uuidId = UUID.fromString(id);
-            return productService.getProductById(uuidId);
+            throw new IllegalArgumentException("Invalid service type: " + serviceToBeUsed);
         }
     }
 
-    public GenericProductDto updateProductById(String id, ProductDto productDto) {
-        if ("fakestore".equals(serviceToBeUsed)) {
+    // We'll use Method Overloading to invoke the Correct Service based on the id parameter passed (Long/UUID)
+    // Method to get Product by ID, determining the correct service to use
+    public GenericProductDto getProductById(String id) throws NotFoundException {
+        if (productService instanceof FakeStoreProductServiceImpl) {
             Long longId = Long.parseLong(id);
-            return fakeStoreProductService.updateProductById(longId, productDto);
-        } else {
+            return ((FakeStoreProductServiceImpl) productService).getProductById(longId);
+        } else if (productService instanceof SelfProductServiceImpl) {
             UUID uuidId = UUID.fromString(id);
-            return productService.updateProductById(uuidId, productDto);
+            return ((SelfProductServiceImpl) productService).getProductById(uuidId);
+        } else {
+            throw new IllegalStateException("Unknown service type");
         }
     }
 
-    public GenericProductDto deleteProductById(String id) {
-        if ("fakestore".equals(serviceToBeUsed)) {
+    public GenericProductDto updateProductById(String id, ProductDto productDto) throws NotFoundException {
+        if (productService instanceof FakeStoreProductServiceImpl) {
             Long longId = Long.parseLong(id);
-            return fakeStoreProductService.deleteProductById(longId);
-        } else {
+            return ((FakeStoreProductServiceImpl) productService).updateProductById(longId, productDto);
+        } else if (productService instanceof SelfProductServiceImpl) {
             UUID uuidId = UUID.fromString(id);
-            return productService.deleteProductById(uuidId);
+            return ((SelfProductServiceImpl) productService).updateProductById(uuidId, productDto);
+        } else {
+            throw new IllegalStateException("Unknown service type");
+        }
+    }
+
+    public GenericProductDto deleteProductById(String id) throws NotFoundException {
+        if (productService instanceof FakeStoreProductServiceImpl) {
+            Long longId = Long.parseLong(id);
+            return ((FakeStoreProductServiceImpl) productService).deleteProductById(longId);
+        } else if (productService instanceof SelfProductServiceImpl) {
+            UUID uuidId = UUID.fromString(id);
+            return ((SelfProductServiceImpl) productService).deleteProductById(uuidId);
+        } else {
+            throw new IllegalStateException("Unknown service type");
         }
     }
 
     public List<GenericProductDto> getAllProductsInCategory(String categoryName) {
-        if ("fakestore".equals(serviceToBeUsed)) {
-            return fakeStoreProductService.getAllProductsInCategory(categoryName);
-        } else {
-            return productService.getAllProductsInCategory(categoryName);
-        }
+        return productService.getAllProductsInCategory(categoryName);
     }
 
     public List<String> getAllProductCategories() {
-        if ("fakestore".equals(serviceToBeUsed)) {
-            return fakeStoreProductService.getAllProductCategories();
-        }
-        else {
-            return productService.getAllProductCategories();
-        }
+        return productService.getAllProductCategories();
     }
 
     public List<GenericProductDto> getAllProducts() {
-        if ("fakestore".equals(serviceToBeUsed)) {
-            return fakeStoreProductService.getAllProducts();
-        } else {
-            return productService.getAllProducts();
-        }
+        return productService.getAllProducts();
     }
 
     public GenericProductDto createProduct(ProductDto productDto) {
-        if ("fakestore".equals(serviceToBeUsed)) {
-            return fakeStoreProductService.createProduct(productDto);
-        } else {
-            return productService.createProduct(productDto);
-        }
+        return productService.createProduct(productDto);
     }
 }
+
 

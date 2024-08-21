@@ -14,9 +14,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Primary
 @Service("fakestoreProductService")
-public class FakeStoreProductServiceImpl implements FakeStoreProductService {
+public class FakeStoreProductServiceImpl implements ProductService<Long> {
 // This service class will all have the method implementations to interact with the Fakestore API.
     private static final Logger log = LoggerFactory.getLogger(SelfProductServiceImpl.class);
     private final FakeStoreProductServiceClient fakeStoreProductServiceClient;

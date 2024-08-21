@@ -7,15 +7,16 @@ import dev.navneet.productservice.exceptions.NotFoundException;
 import java.util.List;
 import java.util.UUID;
 
-public interface ProductService {
+public interface ProductService<T> {
     GenericProductDto createProduct(ProductDto productDto);
-    GenericProductDto getProductById(UUID id) throws NotFoundException;
-    GenericProductDto updateProductById(UUID id, ProductDto productDto) throws NotFoundException;
-    GenericProductDto deleteProductById(UUID id) throws NotFoundException;
+    GenericProductDto getProductById(T id) throws NotFoundException;
+    GenericProductDto updateProductById(T id, ProductDto productDto) throws NotFoundException;
+    GenericProductDto deleteProductById(T id) throws NotFoundException;
     List<GenericProductDto> getAllProducts();
     List<String> getAllProductCategories();
     List<GenericProductDto> getAllProductsInCategory(String categoryName);
 }
+
 
 
 

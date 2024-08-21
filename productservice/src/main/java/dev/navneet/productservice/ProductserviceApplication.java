@@ -22,7 +22,6 @@ import java.util.UUID;
 
 @SpringBootApplication
 public class ProductserviceApplication{// implements CommandLineRunner {
-
 //
 //
 //

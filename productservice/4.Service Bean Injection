@@ -13,7 +13,6 @@ package dev.navneet.productservice.config;
 
 import dev.navneet.productservice.services.FakeStoreProductServiceImpl;
 import dev.navneet.productservice.services.ProductService;
-import dev.navneet.productservice.services.FakeStoreProductService;
 import dev.navneet.productservice.services.SelfProductServiceImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
