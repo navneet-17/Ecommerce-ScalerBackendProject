@@ -1,7 +1,10 @@
 package dev.navneet.productservice.repositories;
 
+import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -34,32 +37,16 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     // re-writing the above query using custom query interface
     @Query(value = CustomQueries.FIND_ALL_BY_TITLE, nativeQuery = true)
     List<Product> findAllByTitle(String naman);
-
     List<Product> findByCategory(Category category);
-
     @Query(nativeQuery = true, value = CustomQueries.GET_ALL_PRODUCT_BY_CATEGORY)
     List<Product> getAllProductByCategory(String categoryName);
-
     @Query(nativeQuery = true, value = CustomQueries.GET_ALL_PRODUCT_CATEGORY)
     List<String> getAllProductCategory();
-
     @Query(value = CustomQueries.FIND_ALL_PRODUCT, nativeQuery = true)
     List<Product> findAllProducts();
-
-    List<Product> findAll();
-
-
     List<Product> findAllByCategoryIn(List<Category> categories);
-
-    // Using Hibernate Query Language (HQL) to get all the products with a specific title:
-
-//    @Query("select products from products where products.price.currency = :currency and products.title = :naman")
-//    List<Product> readAllByTitle(String naman, String currency);
-//
-//    @Query("select products  from products  where products .category.uuid in :uuids")
-//    List<Product> findAllByCategoryIn(List<UUID> uuids);
-
-
+    List<Product> findAll();
+    Page<Product> findAllByTitleContaining(String title, Pageable pageable);
 
 }
 

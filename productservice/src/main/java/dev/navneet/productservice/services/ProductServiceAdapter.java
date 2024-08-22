@@ -6,6 +6,8 @@ import dev.navneet.productservice.exceptions.NotFoundException;
 import lombok.Getter;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -85,9 +87,42 @@ public class ProductServiceAdapter {
         return productService.getAllProducts();
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public GenericProductDto createProduct(ProductDto productDto) {
         return productService.createProduct(productDto);
     }
+
+    public Page<GenericProductDto> getAllProductsPageByPage(Pageable pageable) {
+        return productService.getAllProductsPageByPage(pageable);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

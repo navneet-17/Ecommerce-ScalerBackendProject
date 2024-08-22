@@ -11,9 +11,12 @@ import dev.navneet.productservice.repositories.PriceRepository;
 import dev.navneet.productservice.repositories.CategoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,17 +66,36 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
     @Override
     public List<GenericProductDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
-//        List<ProductDto> productDtoList = new ArrayList<>();
-//        for(Product product: products){
-//            productDtoList.add(convertProductToProductDto(product));
-//        }
-        // Replace using streams:
+
         List<GenericProductDto> productDtoList = products.stream().
                     map(this::convertProductToGenericProductDto).
                     collect(Collectors.toList());
 
         return productDtoList;
     }
+
+    @Override
+    public Page<GenericProductDto> getAllProductsPageByPage(Pageable pageable)  {
+        Page<Product> productsPage = productRepository.findAll(pageable);
+        // Create a list to hold the converted DTOs
+        List<GenericProductDto> productDtos = new ArrayList<GenericProductDto>();
+        // From the product page obtained using the Pageable object, get the list of products
+        List<Product> productsList = productsPage.getContent();
+        for (Product product : productsList) {
+            // Iterate over the products and convert each one to a DTO
+            GenericProductDto dto = convertProductToGenericProductDto(product);
+            productDtos.add(dto);
+        }
+        // Create a new PageImpl object
+        PageImpl<GenericProductDto> dtoPage = new PageImpl<GenericProductDto>(
+                productDtos,
+                pageable,
+                productsPage.getTotalElements()
+        );
+        // Return the PageImpl object
+        return dtoPage;
+    }
+
     @Override
     public GenericProductDto getProductById(UUID id) throws NotFoundException {
         Optional<Product> productObj = productRepository.findById(id);
@@ -151,32 +173,7 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
                 .collect(Collectors.toList());
     }
 
-
-    private ProductDto convertProductToProductDto(Product product){
-        ProductDto productDto = new ProductDto();
-        productDto.setId(String.valueOf(product.getUuid()));
-        productDto.setTitle(product.getTitle());
-        productDto.setDescription(product.getDescription());
-        productDto.setImage(product.getImage());
-        productDto.setCategory(product.getCategory().getName());
-        productDto.setPrice(product.getPrice().getPrice());
-        productDto.setCurrency(product.getPrice().getCurrency());
-        return productDto;
-    }
-    private GenericProductDto convertProductDtoIntoGenericProduct(ProductDto productDto) {
-
-        GenericProductDto product = new GenericProductDto();
-        product.setId(String.valueOf(productDto.getId()));
-        product.setImage(productDto.getImage());
-        product.setDescription(productDto.getDescription());
-        product.setTitle(productDto.getTitle());
-        product.setPrice(productDto.getPrice());
-        product.setCategory(productDto.getCategory());
-
-        return product;
-    }
-
-    private GenericProductDto convertProductToGenericProductDto(Product product){
+    public GenericProductDto convertProductToGenericProductDto(Product product){
         GenericProductDto genericProductDto = new GenericProductDto();
         genericProductDto.setId(String.valueOf(product.getUuid()));
         genericProductDto.setTitle(product.getTitle());

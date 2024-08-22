@@ -6,6 +6,9 @@ import dev.navneet.productservice.dtos.ProductDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
 import dev.navneet.productservice.services.ProductServiceAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +32,13 @@ public class ProductController {
     public List<GenericProductDto> getAllProducts() {
         return productServiceAdapter.getAllProducts();
     }
+
+    @GetMapping
+    public Page<GenericProductDto> getAllProducts(
+            @PageableDefault(size = 10, sort = "title") Pageable pageable) {
+        return productServiceAdapter.getAllProductsPageByPage(pageable);
+    }
+
     @GetMapping("{id}")
     public GenericProductDto getProductById(@PathVariable("id") String productId) throws NotFoundException {
         return productServiceAdapter.getProductById(productId);

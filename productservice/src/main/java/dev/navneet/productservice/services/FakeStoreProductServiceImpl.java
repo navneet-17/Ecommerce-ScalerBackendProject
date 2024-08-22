@@ -8,6 +8,8 @@ import dev.navneet.productservice.thirdpartyclients.productservice.fakestore.Fak
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -83,6 +85,11 @@ public class FakeStoreProductServiceImpl implements ProductService<Long> {
 
     @Override
     public List<GenericProductDto> getAllProductsInCategory(String categoryName) {
+        return null;
+    }
+
+    @Override
+    public Page<GenericProductDto> getAllProductsPageByPage(Pageable pageable) {
         return null;
     }
 
