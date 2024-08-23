@@ -1,10 +1,10 @@
 package dev.navneet.productservice.repositories;
 
-import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

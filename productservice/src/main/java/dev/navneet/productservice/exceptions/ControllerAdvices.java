@@ -4,10 +4,8 @@ import dev.navneet.productservice.dtos.ExceptionDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+
 
     @ControllerAdvice
     public class ControllerAdvices {
@@ -16,7 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
                 NotFoundException notFoundException
         ) {
 
-            return new ResponseEntity(
+            return new ResponseEntity<>(
                     new ExceptionDto(HttpStatus.NOT_FOUND, notFoundException.getMessage()),
                     HttpStatus.NOT_FOUND
             );
@@ -27,9 +25,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
                 ArrayIndexOutOfBoundsException notFoundException
         ) {
 
-            return new ResponseEntity(
-                    new ExceptionDto(HttpStatus.NOT_FOUND, notFoundException.getMessage()),
-                    HttpStatus.NOT_FOUND
+            return new ResponseEntity<>(
+                    new ExceptionDto(HttpStatus.INTERNAL_SERVER_ERROR, notFoundException.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+
+        @ExceptionHandler(InvalidSortTypeParameter.class)
+        private ResponseEntity<ExceptionDto> handleInvalidSortTypeParameter(
+                InvalidSortTypeParameter invalidSortTypeParameter
+        ){
+
+            return new ResponseEntity<>(
+                    new ExceptionDto(HttpStatus.BAD_REQUEST, invalidSortTypeParameter.getMessage()),
+                    HttpStatus.BAD_REQUEST
             );
         }
     }
