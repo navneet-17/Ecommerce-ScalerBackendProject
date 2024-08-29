@@ -1,9 +1,11 @@
 package dev.navneet.userservice.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.navneet.userservice.configs.KafkaProducerClient;
+import dev.navneet.userservice.dtos.SendEmailMessageDto;
 import dev.navneet.userservice.dtos.UserDto;
 import dev.navneet.userservice.exceptions.NotFoundException;
+import dev.navneet.userservice.exceptions.UserAlreadyRegisteredException;
 import dev.navneet.userservice.models.Role;
 import dev.navneet.userservice.models.Session;
 import dev.navneet.userservice.models.SessionStatus;
@@ -21,7 +23,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.server.authentication.AnonymousAuthenticationWebFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMapAdapter;
 import javax.crypto.SecretKey;
@@ -29,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class AuthService {
@@ -38,11 +40,17 @@ public class AuthService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final KafkaProducerClient kafkaProducerClient;
+    private final ObjectMapper objectMapper;
 
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder,
+                       KafkaProducerClient kafkaProducerClient,
+                       ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.kafkaProducerClient = kafkaProducerClient;
+        this.objectMapper = objectMapper;
     }
 
     public ResponseEntity<UserDto> login(String email, String password) throws NotFoundException {
@@ -139,9 +147,10 @@ public class AuthService {
         // Check if the user is already registered
         Optional<User> existingUser = userRepository.findByEmail(email);
         if (existingUser.isPresent()) {
-            UserDto userDto = new UserDto();
-            userDto.setMessage("User with email " + email + " is already registered. Please log in.");
-            return userDto;
+            throw new UserAlreadyRegisteredException("User with email " + email + " is already registered. Please log in.");
+//            UserDto userDto = new UserDto();
+//            userDto.setMessage("User with email " + email + " is already registered. Please log in.");
+//            return userDto;
         }
         // If the user is not registered, proceed with registration
         User user = new User();
@@ -150,6 +159,17 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         UserDto userDto = UserDto.from(savedUser);
         userDto.setMessage("You have been registered successfully. Use your email and password for login.");
+        try{
+            kafkaProducerClient.sendMessage("userSignUp", objectMapper.writeValueAsString(userDto));
+            SendEmailMessageDto emailMessage = new SendEmailMessageDto();
+            emailMessage.setTo(userDto.getEmail());
+            emailMessage.setFrom("admin@scaler.com");
+            emailMessage.setSubject("Welcome to Scaler, "+ userDto.getEmail());
+            emailMessage.setBody("Thanks for creating an account with us. We look forward to you growing. \n\n Team Scaler");
+            kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(emailMessage));
+        } catch (Exception e) {
+            System.out.println("Something has gone wrong");
+        }
         return userDto;
     }
 

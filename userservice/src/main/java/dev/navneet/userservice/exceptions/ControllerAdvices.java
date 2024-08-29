@@ -1,6 +1,7 @@
 package dev.navneet.userservice.exceptions;
 
 import dev.navneet.userservice.dtos.ExceptionDto;
+import dev.navneet.userservice.dtos.UserDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,7 +14,7 @@ public class ControllerAdvices {
             NotFoundException notFoundException) {
 
         return new ResponseEntity<>(
-                new ExceptionDto(HttpStatus.NOT_FOUND, notFoundException.getMessage()),
+                new ExceptionDto(notFoundException.getMessage()),
                 HttpStatus.NOT_FOUND
         );
     }
@@ -23,8 +24,20 @@ public class ControllerAdvices {
             JwtValidationException jwtValidationException) {
 
         return new ResponseEntity<>(
-                new ExceptionDto(HttpStatus.UNAUTHORIZED, jwtValidationException.getMessage()),
+                new ExceptionDto(jwtValidationException.getMessage()),
                 HttpStatus.UNAUTHORIZED
         );
     }
+
+    @ExceptionHandler(UserAlreadyRegisteredException.class)
+    public ResponseEntity<ExceptionDto> handleUserAlreadyRegisteredException(UserAlreadyRegisteredException ex) {
+        return new ResponseEntity<>(
+                new ExceptionDto(ex.getMessage()),
+                HttpStatus.CONFLICT
+        );
+//        UserDto userDto = new UserDto();
+//        userDto.setMessage(ex.getMessage());
+//        return new ResponseEntity<>(userDto, HttpStatus.CONFLICT);  // 409 Conflict
+    }
+
 }
