@@ -15,4 +15,22 @@ public class GenericProductDto implements Serializable {
     private String image;
     private String category;
     private double price;
+
+   // New field to include UserDto
+   private UserDto user;
+
+    // Custom toString method
+    @Override
+    public String toString() {
+        return "GenericProductDto{" +
+                "id='" + id + '\'' +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", image='" + image + '\'' +
+                ", category='" + category + '\'' +
+                ", price=" + price +
+                ", user=" + (user != null ? user.toString() : "null") +
+                '}';
+    }
+
 }

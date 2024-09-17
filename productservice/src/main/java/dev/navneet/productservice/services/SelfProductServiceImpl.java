@@ -2,6 +2,7 @@ package dev.navneet.productservice.services;
 
 import dev.navneet.productservice.dtos.GenericProductDto;
 import dev.navneet.productservice.dtos.ProductDto;
+import dev.navneet.productservice.dtos.UserDto;
 import dev.navneet.productservice.exceptions.NotFoundException;
 import dev.navneet.productservice.models.Category;
 import dev.navneet.productservice.models.Price;
@@ -14,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +32,16 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final PriceRepository priceRepository;
+    private final RestTemplate restTemplate;
 
-    public SelfProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, PriceRepository priceRepository) {
+    public SelfProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository,
+                                  PriceRepository priceRepository, RestTemplate restTemplate) {
         log.info("Creating bean SelfProductServiceImpl");
 
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.priceRepository = priceRepository;
+        this.restTemplate = restTemplate;
     }
     @Override
     public GenericProductDto createProduct(ProductDto productDto) {
@@ -98,12 +104,23 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
 
     @Override
     public GenericProductDto getProductById(UUID id) throws NotFoundException {
+        System.out.println("In product service, calling the user service for user with id-1");
+        ResponseEntity<UserDto> userResponse =
+                restTemplate.getForEntity("http://userservice/users/1", UserDto.class);
+        UserDto userDto = userResponse.getBody();
+
+        //Fetch the actual product details:
         Optional<Product> productObj = productRepository.findById(id);
         if(productObj.isEmpty()){
             throw new NotFoundException("Product with id " + id + "is not found");
         }
         Product product = productObj.get();
-        return convertProductToGenericProductDto(product);
+        GenericProductDto productDto = convertProductToGenericProductDto(product);
+
+        // Set the UserDto in the response
+        productDto.setUser(userDto);
+//        System.out.println(productDto.toString());
+        return productDto;
     }
 
     public GenericProductDto deleteProductById(UUID id) throws NotFoundException{

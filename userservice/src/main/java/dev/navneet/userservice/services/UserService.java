@@ -7,6 +7,7 @@ import dev.navneet.userservice.repositories.RoleRepository;
 import dev.navneet.userservice.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,15 +22,22 @@ public class UserService {
         this.roleRepository = roleRepository;
     }
 
-    public List <User> getAllUsers() {
-        return userRepository.findAll();
+    public List <UserDto> getAllUsers() {
+        List<User> allUsers= userRepository.findAll();
+        List<UserDto> usersDto = new ArrayList<>();
+        for(User user: allUsers){
+            usersDto.add(UserDto.from(user));
+        }
+        return usersDto;
     }
 
     public UserDto getUserDetails(Long userId) {
+        System.out.println("called from the product service");
+//        return new UserDto();
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isEmpty()) {
-            return null;
+            return new UserDto();
         }
         return UserDto.from(userOptional.get());
     }
