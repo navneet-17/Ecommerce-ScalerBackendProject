@@ -29,6 +29,14 @@ public class ControllerAdvices {
         );
     }
 
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ExceptionDto> handleInvalidPasswordResetTokenException(InvalidPasswordResetTokenException ex) {
+        return new ResponseEntity<>(
+                new ExceptionDto(ex.getMessage()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
     @ExceptionHandler(UserAlreadyRegisteredException.class)
     public ResponseEntity<ExceptionDto> handleUserAlreadyRegisteredException(UserAlreadyRegisteredException ex) {
         return new ResponseEntity<>(

@@ -33,6 +33,13 @@ public class OrderController {
         return orderService.getOrdersByUserId(userId);
     }
 
+    // 3. Get All Orders
+    @GetMapping("")
+    public  List<OrderResponseDto>  getAllOrders() {
+        // Delegate to the service and pass along the ResponseEntity
+        return orderService.getAllOrders();
+    }
+
     // 3. Get Specific Order by Order ID
     @GetMapping("/track/{orderId}")
     public ResponseEntity<OrderResponseDto> trackOrder(@PathVariable Long orderId) {
@@ -52,4 +59,16 @@ public class OrderController {
     public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) {
         return orderService.cancelOrder(orderId);
     }
+
+    @PutMapping("/{orderId}/archive")
+    public ResponseEntity<String> archiveOrder(@PathVariable Long orderId) {
+        return orderService.archiveOrder(orderId);
+    }
+
+    @GetMapping("/archived/{userId}")
+    public ResponseEntity<List<OrderResponseDto>> getArchivedOrders(@PathVariable Long userId) {
+        List<OrderResponseDto> orders = orderService.getArchivedOrders(userId);
+        return ResponseEntity.ok(orders);
+    }
+
 }

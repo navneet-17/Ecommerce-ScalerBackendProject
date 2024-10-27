@@ -24,6 +24,20 @@ public class AuthController {
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
+    @PostMapping("/resetPassword")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequestDto passwordResetRequestDto) {
+        return authService.resetPassword(passwordResetRequestDto.getEmail());
+    }
+
+    @PostMapping("/verifyPasswordResetCode")
+    public ResponseEntity<String> verifyPasswordResetCode(@RequestBody PasswordResetVerificationDto passwordResetVerificationDto) {
+        return authService.verifyResetCodeAndChangePassword(passwordResetVerificationDto);
+    }
+    @PostMapping("/changePassword")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequestDto passwordChangeRequestDto) {
+        return authService.changePassword(passwordChangeRequestDto.getEmail(), passwordChangeRequestDto.getPassword());
+    }
+
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequest) {
         return authService.login(loginRequest.getEmail(), loginRequest.getPassword());

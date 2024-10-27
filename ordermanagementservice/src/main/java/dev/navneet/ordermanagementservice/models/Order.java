@@ -19,10 +19,14 @@ public class Order {
     private Long userId;
     private Double totalAmount;
     private String deliveryAddress;
+    private String paymentMethod;
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private LocalDateTime orderDate = LocalDateTime.now();
     private LocalDateTime expectedDeliveryDate;
+
+//   Ensure the order items are loaded eagerly, and fetched when we reference the order
+//    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;

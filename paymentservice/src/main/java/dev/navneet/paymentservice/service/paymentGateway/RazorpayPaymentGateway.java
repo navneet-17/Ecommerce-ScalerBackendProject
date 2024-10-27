@@ -2,15 +2,21 @@ package dev.navneet.paymentservice.service.paymentGateway;
 
 import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
+import dev.navneet.paymentservice.models.Payment;
+import dev.navneet.paymentservice.repositories.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.json.JSONObject;
+
+import java.time.LocalDateTime;
 
 @Service
 public class RazorpayPaymentGateway implements PaymentGateway{
     private final RazorpayClient razorpayClient;
+    private final PaymentRepository paymentRepository;
 
-    RazorpayPaymentGateway(RazorpayClient razorpayClient){
+    RazorpayPaymentGateway(RazorpayClient razorpayClient, PaymentRepository paymentRepository){
         this.razorpayClient = razorpayClient;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -39,6 +45,16 @@ public class RazorpayPaymentGateway implements PaymentGateway{
             paymentLinkRequest.put("notes",notes);
             paymentLinkRequest.put("callback_url","https://example-callback-url.com/");
             paymentLinkRequest.put("callback_method","get");
+
+            // Persist payment details in the database
+            Payment paymentRecord = new Payment();
+            paymentRecord.setOrderId(orderId);
+            paymentRecord.setEmail(email);
+            paymentRecord.setPhoneNumber(phoneNumber);
+            paymentRecord.setAmount(amount);
+            paymentRecord.setStatus("PENDING");
+            paymentRecord.setCreatedDate(LocalDateTime.now());
+            paymentRepository.save(paymentRecord);
 
             PaymentLink payment = razorpayClient.paymentLink.create(paymentLinkRequest);
             return payment.get("short_url").toString();

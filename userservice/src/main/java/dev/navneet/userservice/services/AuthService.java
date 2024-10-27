@@ -2,22 +2,25 @@ package dev.navneet.userservice.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import dev.navneet.userservice.configs.KafkaProducerClient;
+import dev.navneet.userservice.dtos.PasswordResetVerificationDto;
 import dev.navneet.userservice.dtos.SendEmailMessageDto;
 import dev.navneet.userservice.dtos.UserDto;
+import dev.navneet.userservice.exceptions.InvalidPasswordResetTokenException;
 import dev.navneet.userservice.exceptions.NotFoundException;
 import dev.navneet.userservice.exceptions.UserAlreadyRegisteredException;
-import dev.navneet.userservice.models.Role;
-import dev.navneet.userservice.models.Session;
-import dev.navneet.userservice.models.SessionStatus;
+import dev.navneet.userservice.models.*;
+import dev.navneet.userservice.repositories.PasswordResetTokenRepository;
 import dev.navneet.userservice.repositories.SessionRepository;
 import dev.navneet.userservice.repositories.UserRepository;
-import dev.navneet.userservice.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.logging.LoggersEndpoint;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,7 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMapAdapter;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,15 +44,20 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final KafkaProducerClient kafkaProducerClient;
     private final ObjectMapper objectMapper;
+    private final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder,
+
+
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, PasswordResetTokenRepository passwordResetTokenRepository, BCryptPasswordEncoder bCryptPasswordEncoder,
                        KafkaProducerClient kafkaProducerClient,
                        ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.kafkaProducerClient = kafkaProducerClient;
         this.objectMapper = objectMapper;
@@ -173,7 +183,102 @@ public class AuthService {
         return userDto;
     }
 
-       public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
+    public ResponseEntity<String> resetPassword(String email) {
+        return generateResetCode(email);
+    }
+
+    public ResponseEntity<String> generateResetCode(String userEmail) {
+        Optional<User> userOptional = userRepository.findByEmail(userEmail);
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("No User was found with email " + userEmail);
+        }
+
+        logger.info("User with email "+ userEmail+ " was found for the password reset" );
+        // Generate a random reset code
+        String resetCode = String.valueOf(new Random().nextInt(900000) + 100000); // 6-digit code
+
+        // Create a new token with an expiry of 15 minutes
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setUserEmail(userEmail); // Store email instead of user entity
+        resetToken.setToken(resetCode);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15)); // Set expiry to 15 minutes
+        passwordResetTokenRepository.save(resetToken);
+
+        // Send email with the reset code
+        SendEmailMessageDto emailMessage = new SendEmailMessageDto();
+        emailMessage.setTo(userEmail);
+        emailMessage.setFrom("admin@scaler.com");
+        emailMessage.setSubject("Password Reset Code");
+        emailMessage.setBody("Your password reset code is: " + resetCode);
+
+        try {
+            kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(emailMessage));
+        } catch (Exception e) {
+            System.out.println("Failed to send password reset email");
+        }
+
+        return ResponseEntity.ok("Password reset code sent to your email.");
+    }
+
+    public ResponseEntity<String> verifyResetCodeAndChangePassword(PasswordResetVerificationDto verificationDto) {
+        // Find the user by email
+        Optional<User> userOptional = userRepository.findByEmail(verificationDto.getEmail());
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("User with email " + verificationDto.getEmail() + " not found");
+        }
+        // Validate the reset code using email and token
+        Optional<PasswordResetToken> resetTokenOptional = passwordResetTokenRepository.findByUserEmailAndToken(
+                    verificationDto.getEmail(), verificationDto.getResetCode()
+            );
+
+        // Check if the token is valid and not expired
+        if (resetTokenOptional.isEmpty() || resetTokenOptional.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+                throw new InvalidPasswordResetTokenException("Invalid or expired reset code");
+        }
+
+        System.out.println(" password sent to BCrypt"+ verificationDto.getNewPassword() );
+        // Proceed to change the password using the existing changePassword method
+        ResponseEntity<String> response = changePassword(verificationDto.getEmail(), verificationDto.getNewPassword());
+
+        // Manually delete the token after successful password reset to clean up
+        passwordResetTokenRepository.delete(resetTokenOptional.get());
+        return response;
+   }
+
+
+    public ResponseEntity<String> changePassword(String userEmail, String newPassword) {
+        Optional<User> userOptional = userRepository.findByEmail(userEmail);
+        if (userOptional.isEmpty()) {
+            throw new NotFoundException("User with email " + userEmail + " not found");
+        }
+        User user = userOptional.get();
+
+        System.out.println("Setting new Password for User " + user.getEmail());
+        System.out.println("New password " + newPassword);
+        // Update the password
+        user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Prepare the email message
+        SendEmailMessageDto emailMessage = new SendEmailMessageDto();
+        emailMessage.setTo(user.getEmail());
+        emailMessage.setFrom("admin@scaler.com");
+        emailMessage.setSubject("Password Change Notification");
+        emailMessage.setBody("Your password has been changed successfully. If you did not initiate this change, " +
+                              "please contact support immediately.");
+
+        // Send email via Kafka
+        try {
+            kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(emailMessage));
+        } catch (Exception e) {
+            System.out.println("Failed to send password change notification email");
+        }
+
+        return ResponseEntity.ok("Password has been changed successfully.");
+    }
+
+
+    public ResponseEntity<Map<String, Object>> validateToken(String jwtToken) {
         return null;
     }
 
@@ -247,4 +352,6 @@ public class AuthService {
         }
         return SessionStatus.ACTIVE;
     }
+
+
 }

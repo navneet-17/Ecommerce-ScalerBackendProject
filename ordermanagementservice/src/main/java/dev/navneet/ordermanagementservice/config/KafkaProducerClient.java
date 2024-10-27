@@ -1,4 +1,4 @@
-package dev.navneet.userservice.configs;
+package dev.navneet.ordermanagementservice.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;

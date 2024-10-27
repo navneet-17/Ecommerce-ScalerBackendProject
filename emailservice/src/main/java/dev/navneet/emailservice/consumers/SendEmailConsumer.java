@@ -16,6 +16,8 @@ import java.util.Properties;
 public class SendEmailConsumer {
     private final ObjectMapper objectMapper;
     private final EmailUtil emailUtil;
+    private final String gmailPassword = System.getenv("GMAIL_PASSWORD"); // fetch password from intelliJ;
+
     public SendEmailConsumer(ObjectMapper objectMapper,
                              EmailUtil emailUtil) {
         this.objectMapper = objectMapper;
@@ -36,7 +38,7 @@ public class SendEmailConsumer {
         Authenticator auth = new Authenticator() {
             //override the getPasswordAuthentication method
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("testemails1717@gmail.com", "");
+                return new PasswordAuthentication("testemails1717@gmail.com", gmailPassword);
             }
         };
         Session session = Session.getInstance(props, auth);
