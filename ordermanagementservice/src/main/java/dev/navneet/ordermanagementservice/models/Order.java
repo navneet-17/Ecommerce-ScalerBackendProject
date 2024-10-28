@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,9 +25,6 @@ public class Order {
     private OrderStatus status;
     private LocalDateTime orderDate = LocalDateTime.now();
     private LocalDateTime expectedDeliveryDate;
-
-//   Ensure the order items are loaded eagerly, and fetched when we reference the order
-//    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;

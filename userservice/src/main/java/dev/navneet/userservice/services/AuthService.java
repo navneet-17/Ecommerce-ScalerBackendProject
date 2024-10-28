@@ -192,31 +192,26 @@ public class AuthService {
         if (userOptional.isEmpty()) {
             throw new NotFoundException("No User was found with email " + userEmail);
         }
-
-        logger.info("User with email "+ userEmail+ " was found for the password reset" );
+        logger.info("User with email {} was found for the password reset", userEmail);
         // Generate a random reset code
         String resetCode = String.valueOf(new Random().nextInt(900000) + 100000); // 6-digit code
-
         // Create a new token with an expiry of 15 minutes
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setUserEmail(userEmail); // Store email instead of user entity
         resetToken.setToken(resetCode);
         resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15)); // Set expiry to 15 minutes
         passwordResetTokenRepository.save(resetToken);
-
         // Send email with the reset code
         SendEmailMessageDto emailMessage = new SendEmailMessageDto();
         emailMessage.setTo(userEmail);
         emailMessage.setFrom("admin@scaler.com");
         emailMessage.setSubject("Password Reset Code");
         emailMessage.setBody("Your password reset code is: " + resetCode);
-
         try {
             kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(emailMessage));
         } catch (Exception e) {
             System.out.println("Failed to send password reset email");
         }
-
         return ResponseEntity.ok("Password reset code sent to your email.");
     }
 
@@ -252,9 +247,7 @@ public class AuthService {
             throw new NotFoundException("User with email " + userEmail + " not found");
         }
         User user = userOptional.get();
-
-        System.out.println("Setting new Password for User " + user.getEmail());
-        System.out.println("New password " + newPassword);
+        logger.info("Setting new Password for User with email {}", userEmail);
         // Update the password
         user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -266,7 +259,6 @@ public class AuthService {
         emailMessage.setSubject("Password Change Notification");
         emailMessage.setBody("Your password has been changed successfully. If you did not initiate this change, " +
                               "please contact support immediately.");
-
         // Send email via Kafka
         try {
             kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(emailMessage));

@@ -87,22 +87,6 @@ public class ProductServiceAdapter {
         return productService.getAllProducts();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public GenericProductDto createProduct(ProductDto productDto) {
         return productService.createProduct(productDto);
     }

@@ -33,9 +33,11 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
     private final CategoryRepository categoryRepository;
     private final PriceRepository priceRepository;
     private final RestTemplate restTemplate;
+    private final ElasticSearchService elasticSearchService;
 
     public SelfProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository,
-                                  PriceRepository priceRepository, RestTemplate restTemplate) {
+                                  PriceRepository priceRepository, RestTemplate restTemplate, ElasticSearchService elasticSearchService) {
+        this.elasticSearchService = elasticSearchService;
         log.info("Creating bean SelfProductServiceImpl");
 
         this.productRepository = productRepository;
@@ -66,6 +68,14 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
 
         // Convert the Product to ProductDto and return it
         Product savedProduct = productRepository.save(product);
+
+        // Index the product in ElasticSearch
+        try {
+            elasticSearchService.indexProduct(savedProduct);
+        } catch (Exception e) {
+            log.error("Failed to index product with id {} in Elasticsearch:", savedProduct.getUuid(), e);
+        }
+
         return convertProductToGenericProductDto(savedProduct);
     }
 
@@ -131,6 +141,14 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
         Product product = productObj.get();
         GenericProductDto deletedProductDto = convertProductToGenericProductDto(product);
         productRepository.deleteById(id);
+
+        // Remove the product from ElasticSearch
+        try {
+            elasticSearchService.deleteProductFromIndex(id.toString());
+        } catch (Exception e) {
+            log.error("Failed to delete product from Elasticsearch: " + id, e);
+        }
+
         return deletedProductDto;
     }
 
@@ -171,6 +189,13 @@ public class SelfProductServiceImpl  implements ProductService<UUID> {
         }
 
         Product updatedProduct = productRepository.save(product);
+
+        // Update the product in ElasticSearch
+        try {
+            elasticSearchService.indexProduct(updatedProduct);
+        } catch (Exception e) {
+            log.error("Failed to update product with id {} in Elasticsearch:", updatedProduct.getUuid(), e);
+        }
         return convertProductToGenericProductDto(updatedProduct);
     }
 

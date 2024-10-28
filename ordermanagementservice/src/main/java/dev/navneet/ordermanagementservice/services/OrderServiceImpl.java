@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -53,6 +54,7 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentMethod(checkoutRequestDto.getPaymentMethod());
         order.setStatus(OrderStatus.PENDING);  // Initial status is PENDING
         order.setOrderDate(LocalDateTime.now());
+        // Get the Expected Delivery Date, only extracting the date from LocalDateTime
         order.setExpectedDeliveryDate(calculateExpectedDeliveryDate());
 
         // Map and calculate totalItemPrice for each order item
@@ -69,10 +71,10 @@ public class OrderServiceImpl implements OrderService {
                     orderItem.setOrder(order);
                     return orderItem;
                 })
-                .toList();
+                .collect(Collectors.toList());
 
         order.setOrderItems(orderItems);
-       logger.info("\n Order details before payment details: \n {} ", order);
+       logger.info("\n Order details before payment: \n {} ", order);
 
         // Step 3: Save the order with PENDING status
         Order savedOrder = orderRepository.save(order);
@@ -93,8 +95,8 @@ public class OrderServiceImpl implements OrderService {
         // Proceed with email sending if user details are available
         if (userDto != null) {
             try {
-                // Sending signup message to Kafka (assuming it's relevant)
-                kafkaProducerClient.sendMessage("orderCreated", objectMapper.writeValueAsString(userDto));
+//                // Sending signup message to Kafka (assuming it's relevant)
+//                kafkaProducerClient.sendMessage("orderCreated", objectMapper.writeValueAsString(userDto));
                 // Preparing conditional email message based on payment status
                 SendEmailMessageDto emailMessage = new SendEmailMessageDto();
                 emailMessage.setTo(userDto.getEmail());
@@ -111,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
                             "Total Amount: " + savedOrder.getTotalAmount() + "\n" +
                             "Payment Method: " + savedOrder.getPaymentMethod() + "\n" +
                             "Delivery Address: " + savedOrder.getDeliveryAddress() + "\n" +
-                            "Expected Delivery Date: " + savedOrder.getExpectedDeliveryDate() + "\n\n" +
+                            "Expected Delivery Date: " + getDateinString(savedOrder.getExpectedDeliveryDate()) + "\n\n" +
                             "Thank you for choosing Scaler.\n\nBest Regards,\nTeam Scaler");
                 }
                 else if (savedOrder.getStatus() == OrderStatus.PENDING_PAYMENT) {
@@ -122,12 +124,13 @@ public class OrderServiceImpl implements OrderService {
                             "Please retry the payment within the next 10 minutes to complete your order. Your items are being held in the cart.\n\n" +
                             "Order Details:\n" +
                             "Order ID: " + savedOrder.getId() + "\n" +
-                            "Order Details: " + savedOrder.getOrderItems() + "\n" +
                             "Total Amount: " + savedOrder.getTotalAmount() + "\n" +
                             "Delivery Address: " + savedOrder.getDeliveryAddress() + "\n" +
-                            "Expected Delivery Date: " + savedOrder.getExpectedDeliveryDate() + "\n\n" +
+                            "Expected Delivery Date: " + getDateinString(savedOrder.getExpectedDeliveryDate()) + "\n\n" +
                             "If you have any questions, please contact our support team.\n\nBest Regards,\nTeam Scaler");
                 }
+                logger.info("Email message prepared for userId: {}, having email: {}", userId, userDto.getEmail());
+                logger.info("Email message details: {},{}", emailMessage.getSubject() , emailMessage.getBody());
 
                 // Sending email message to Kafka
                 kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(emailMessage));
@@ -305,13 +308,13 @@ public class OrderServiceImpl implements OrderService {
 
             // Mocking successful or unsuccessful payment randomly
             boolean isPaymentSuccessful = Math.random() > 0.1;
+            logger.info("Payment processed for order ID: {}, Payment successful: {}", order.getId(), isPaymentSuccessful);
 
             if (isPaymentSuccessful) {
                 // If payment is successful, set order status to 'PLACED'
                 order.setStatus(OrderStatus.PLACED);
                 orderRepository.save(order);  // Save the updated order status
                 logger.info("Payment successful for order ID: {}, Order status updated to PLACED", order.getId());
-
                 return "Payment successful";
             } else {
                 // If payment fails, set order status to 'PENDING-PAYMENT'
@@ -347,4 +350,22 @@ public class OrderServiceImpl implements OrderService {
         }
         return userDto;
     }
+
+    public String getOrderItemsFromOrder(Order order) {
+        // Construct the order items details string
+        StringBuilder orderItemsDetails = new StringBuilder();
+        for (OrderItem item : order.getOrderItems()) {
+            orderItemsDetails.append("Product ID: ").append(item.getProductId())
+                    .append(", Quantity: ").append(item.getQuantity())
+                    .append(", Total Item Price: ").append(item.getTotalItemPrice())
+                    .append("\n");
+        }
+        return orderItemsDetails.toString();
+    }
+
+    public String getDateinString(LocalDateTime date) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+        return date.format(dateFormatter);
+    }
+
 }

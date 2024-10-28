@@ -29,9 +29,7 @@ public class SearchController {
         int pageNumber = searchRequestDto.getPageNumber();
         int pageSize = searchRequestDto.getSizeOfEachPage();
         Pageable pageable = PageRequest.of(pageNumber,pageSize);
-        List<SortParameter> sortByParameters = searchRequestDto
-                                                                .getSortByParameters();
-
+        List<SortParameter> sortByParameters = searchRequestDto.getSortByParameters();
         return searchService.searchProducts(
                 query, pageable, sortByParameters);
     }

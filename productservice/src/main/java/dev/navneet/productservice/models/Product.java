@@ -10,7 +10,7 @@ public class Product extends BaseModel {
     private String title;
     private String description;
     private String image;
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "category_id")
     private Category category;
 
